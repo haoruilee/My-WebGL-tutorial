@@ -4,6 +4,7 @@ haoruili at 2020
  * */
 
 // 顶点着色器源码
+//vs,处理顶点
 var vertexShaderSrc = `
 attribute vec4 a_Position;// 接收传入位置坐标，必须声明为全局
 attribute float a_PointSize;// 接收传入位置坐标，必须声明为全局，绘制单个点时才生效
@@ -13,6 +14,7 @@ void main(){
 }`;
 
 // 片段着色器源码
+//ps 上色
 var fragmentShaderSrc = `
 precision mediump float;// 设置精度
 uniform vec4 u_FragColor;// 接收传入的颜色参数
@@ -49,6 +51,8 @@ function main() {
 
     var u_FragColor = gl.getUniformLocation(gl.program, "u_FragColor"); // 获取shader中的u_FragColor变量
     var a_Position = gl.getAttribLocation(gl.program, "a_Position"); // 获取shader中的a_Position变量
+
+    //onmousedown检测鼠标点击
     canvas.onmousedown = function(event) {
         onClick(event, gl, canvas, a_Position, u_FragColor);
     };
