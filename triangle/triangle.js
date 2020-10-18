@@ -8,7 +8,10 @@ window.onload = function init() {
     if (!gl) { alert("WebGL isn't available"); }
 
     //三角形参数，作为vertices
-    var vertices = new Float32Array([-1, -1, 0, 1, 1, -1]);
+    //-1,-1是第一个点的坐标，0,1是第二个点的坐标，1,-1是第三个点的坐标，前三个点组成一个片元，后面继续写是新片元
+    var vertices = new Float32Array([-1, -0.5, 0, 1, 1, -1,
+        1, -0.5, 0.5, 0.5, 1, 1, -1, 1, 0, 0, 1, 1
+    ]);
 
     //  Configure WebGL
 
@@ -39,5 +42,5 @@ window.onload = function init() {
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 9);
 }
