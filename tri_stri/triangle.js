@@ -44,8 +44,8 @@ function init() {
     //获取顶点着色器中attribute变量位置
     var a_Position = gl.getAttribLocation(program, "a_Position");
 
-    var SIZE = verticescolor.BYTES_PER_ELEMENT;
-    //建立a_Position与顶点着色器attribute变量“a_Position”的关联
+    var SIZE = verticescolor.BYTES_PER_ELEMENT
+        //建立a_Position与顶点着色器attribute变量“a_Position”的关联
     gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, SIZE * 5, 0);
     gl.enableVertexAttribArray(a_Position);
 
@@ -62,7 +62,7 @@ function init() {
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT); //清除屏幕
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4) //画三角形，两个三角形拼凑成一个矩形
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4) //strip
 
 }
 window.onload = init; //window加载init函数，最终显示矩形

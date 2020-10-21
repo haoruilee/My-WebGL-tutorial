@@ -83,6 +83,7 @@ function onClick(event, gl, canvas, a_Position, u_FragColor) {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     for (var i = 0; i < g_points.length; i++) {
+        //鼠标点击过几次，就绘制几次
         var pos = g_points[i];
         var rgba = g_colors[i];
 
