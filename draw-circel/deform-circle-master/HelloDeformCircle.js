@@ -28,11 +28,11 @@ var pMatrix = mat4.create();
 var defAngle = 0;
 
 /** @global Number of vertices around the circle boundary */
-var numCircleVerts = 100;
+var numCircleVerts = 100; //分多少次，如果是3就是三角形！
 
 /** @global Two times pi to save some multiplications...*/
-var twicePi=2.0*3.14159;
-    
+var twicePi = 2.0 * 3.14159;
+
 //----------------------------------------------------------------------------------
 /**
  * Sends projection/modelview matrices to shader
@@ -48,7 +48,7 @@ function setMatrixUniforms() {
  * @return {Number} The radians that correspond to the degree input
  */
 function degToRad(degrees) {
-        return degrees * Math.PI / 180;
+    return degrees * Math.PI / 180;
 }
 
 
@@ -58,23 +58,23 @@ function degToRad(degrees) {
  * @return {Object} WebGL context
  */
 function createGLContext(canvas) {
-  var names = ["webgl", "experimental-webgl"];
-  var context = null;
-  for (var i=0; i < names.length; i++) {
-    try {
-      context = canvas.getContext(names[i]);
-    } catch(e) {}
-    if (context) {
-      break;
+    var names = ["webgl", "experimental-webgl"];
+    var context = null;
+    for (var i = 0; i < names.length; i++) {
+        try {
+            context = canvas.getContext(names[i]);
+        } catch (e) {}
+        if (context) {
+            break;
+        }
     }
-  }
-  if (context) {
-    context.viewportWidth = canvas.width;
-    context.viewportHeight = canvas.height;
-  } else {
-    alert("Failed to create WebGL context!");
-  }
-  return context;
+    if (context) {
+        context.viewportWidth = canvas.width;
+        context.viewportHeight = canvas.height;
+    } else {
+        alert("Failed to create WebGL context!");
+    }
+    return context;
 }
 
 /**
@@ -82,68 +82,68 @@ function createGLContext(canvas) {
  * @param {string} id ID string for shader to load. Either vertex shader/fragment shader
  */
 function loadShaderFromDOM(id) {
-  var shaderScript = document.getElementById(id);
-  
-  // If we don't find an element with the specified id
-  // we do an early exit 
-  if (!shaderScript) {
-    return null;
-  }
-  
-  // Loop through the children for the found DOM element and
-  // build up the shader source code as a string
-  var shaderSource = "";
-  var currentChild = shaderScript.firstChild;
-  while (currentChild) {
-    if (currentChild.nodeType == 3) { // 3 corresponds to TEXT_NODE
-      shaderSource += currentChild.textContent;
+    var shaderScript = document.getElementById(id);
+
+    // If we don't find an element with the specified id
+    // we do an early exit 
+    if (!shaderScript) {
+        return null;
     }
-    currentChild = currentChild.nextSibling;
-  }
- 
-  var shader;
-  if (shaderScript.type == "x-shader/x-fragment") {
-    shader = gl.createShader(gl.FRAGMENT_SHADER);
-  } else if (shaderScript.type == "x-shader/x-vertex") {
-    shader = gl.createShader(gl.VERTEX_SHADER);
-  } else {
-    return null;
-  }
- 
-  gl.shaderSource(shader, shaderSource);
-  gl.compileShader(shader);
- 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    alert(gl.getShaderInfoLog(shader));
-    return null;
-  } 
-  return shader;
+
+    // Loop through the children for the found DOM element and
+    // build up the shader source code as a string
+    var shaderSource = "";
+    var currentChild = shaderScript.firstChild;
+    while (currentChild) {
+        if (currentChild.nodeType == 3) { // 3 corresponds to TEXT_NODE
+            shaderSource += currentChild.textContent;
+        }
+        currentChild = currentChild.nextSibling;
+    }
+
+    var shader;
+    if (shaderScript.type == "x-shader/x-fragment") {
+        shader = gl.createShader(gl.FRAGMENT_SHADER);
+    } else if (shaderScript.type == "x-shader/x-vertex") {
+        shader = gl.createShader(gl.VERTEX_SHADER);
+    } else {
+        return null;
+    }
+
+    gl.shaderSource(shader, shaderSource);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert(gl.getShaderInfoLog(shader));
+        return null;
+    }
+    return shader;
 }
 
 /**
  * Setup the fragment and vertex shaders
  */
 function setupShaders() {
-  vertexShader = loadShaderFromDOM("shader-vs");
-  fragmentShader = loadShaderFromDOM("shader-fs");
-  
-  shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  gl.linkProgram(shaderProgram);
+    vertexShader = loadShaderFromDOM("shader-vs");
+    fragmentShader = loadShaderFromDOM("shader-fs");
 
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    alert("Failed to setup shaders");
-  }
+    shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
 
-  gl.useProgram(shaderProgram);
-  shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-  gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert("Failed to setup shaders");
+    }
 
-  shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-  gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
-  shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-  shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+    gl.useProgram(shaderProgram);
+    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+    shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+    gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 }
 
 
@@ -158,9 +158,10 @@ function setupShaders() {
   @return {object} a deformation vector to be applied to the boundary point
  */
 
-function deformSin(x, y, angle){
+function deformSin(x, y, angle) {
     var circPt = vec2.fromValues(x, y);
-    var dist = 0.2*Math.sin((angle) + degToRad(defAngle));
+    //dist控制了画出来是多大
+    var dist = 0.07 * Math.sin((angle) + degToRad(defAngle));
     vec2.normalize(circPt, circPt);
     vec2.scale(circPt, circPt, dist);
     return circPt;
@@ -174,34 +175,36 @@ function deformSin(x, y, angle){
   @param {number} number of vertices to use around the circle boundary
  */
 function loadVertices(numVertices) {
-    console.log("Frame",defAngle);
-//Generate the vertex positions    
-  vertexPositionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
-    
-  // Start with vertex at the origin    
-  var triangleVertices = [0.0,0.0,0.0];
+    console.log("Frame", defAngle);
+    //Generate the vertex positions    
+    vertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
 
-  //Generate a triangle fan around origin
-  var radius=0.5
-  var z=0.0;    
-    
-    
-//if i < numVertices, a circle with a dent
-  for (i=0;i<=numVertices;i++){
-      angle = i *  twicePi / numVertices;
-      x=(radius * Math.cos(angle));
-      y=(radius * Math.sin(angle));
-      var dPt = deformSin(x, y, angle);
-      // Add offsets based on a since curve to the circle boundary vertices
-      triangleVertices.push(x + dPt[0]); 
-      triangleVertices.push(y + dPt[1]);
-      triangleVertices.push(z);
-  }
+    // Start with vertex at the origin    
+    var triangleVertices = [0.0, 0.0, 0.0];
+
+    //Generate a triangle fan around origin
+    //控制了差分之后多大
+    var radius = 0.01
+    var z = 0.0;
+
+
+    //if i < numVertices, a circle with a dent
+    for (i = 0; i <= numVertices; i++) {
+        angle = i * twicePi / numVertices;
+        x = (radius * Math.cos(angle));
+        y = (radius * Math.sin(angle));
+        var dPt = deformSin(x, y, angle);
+        // Add offsets based on a since curve to the circle boundary vertices
+        triangleVertices.push(x + dPt[0]);
+        triangleVertices.push(y + dPt[1]);
+        triangleVertices.push(z);
+    }
     //DYNAMIC_DRAW means we'll be changing the values in the buffer
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.DYNAMIC_DRAW);
-  vertexPositionBuffer.itemSize = 3;
-  vertexPositionBuffer.numberOfItems = numVertices+2;
+    //这个参数非常玄学
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.DYNAMIC_DRAW);
+    vertexPositionBuffer.itemSize = 3;
+    vertexPositionBuffer.numberOfItems = numVertices + 2;
 }
 
 
@@ -212,77 +215,77 @@ function loadVertices(numVertices) {
   @param {number} number of vertices to use around the circle boundary
  */
 function loadColors(numVertices) {
-  vertexColorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
-    
-  // Set the heart of the circle to be black    
-  var colors = [0.0,0.0,0.0,1.0];
-  
-  var a = 1.0;
-  var g = 0.0;
-  var halfV = numVertices/2.0;
-  for (i=0;i<=numVertices;i++){
-      r=Math.abs((i-halfV)/halfV);
-      b= 1.0-r;
-      colors.push(r);
-      colors.push(g);
-      colors.push(b);
-      colors.push(a);
-  }
-    
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-  vertexColorBuffer.itemSize = 4;
-  vertexColorBuffer.numItems = numVertices+2;  
+    vertexColorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
+
+    // Set the heart of the circle to be black    
+    var colors = [0.0, 0.0, 0.0, 1.0];
+
+    var a = 1.0;
+    var g = 0.0;
+    var halfV = numVertices / 2.0;
+    for (i = 0; i <= numVertices; i++) {
+        r = Math.abs((i - halfV) / halfV);
+        b = 1.0 - r;
+        colors.push(r);
+        colors.push(g);
+        colors.push(b);
+        colors.push(a);
+    }
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    vertexColorBuffer.itemSize = 4;
+    vertexColorBuffer.numItems = numVertices + 2;
 }
 /**
  * Populate buffers with data
    @param {number} number of vertices to use around the circle boundary
  */
 function setupBuffers(numVertices) {
-    
-  //Generate the vertex positions    
-  loadVertices(numVertices);
 
-  //Generate the vertex colors
-  loadColors(numVertices);
+    //Generate the vertex positions    
+    loadVertices(numVertices);
+
+    //Generate the vertex colors
+    loadColors(numVertices);
 }
 
 /**
  * Draw call that applies matrix transformations to model and draws model in frame
  */
-function draw() { 
-  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); 
+function draw() {
+    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  mat4.identity(mvMatrix);
-  mat4.identity(pMatrix);
-    
-  //mat4.ortho(pMatrix,-1,1,-1,1,1,-1);  
-  
+    mat4.identity(mvMatrix);
+    mat4.identity(pMatrix);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
-  gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 
-                         vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
-  gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, 
-                            vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-  
-  setMatrixUniforms();
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, vertexPositionBuffer.numberOfItems);
+    //mat4.ortho(pMatrix,-1,1,-1,1,1,-1);  
+
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
+        vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexColorBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexColorAttribute,
+        vertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    setMatrixUniforms();
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, vertexPositionBuffer.numberOfItems);
 }
 
 
 /**
  * Startup function called from html code to start program.
  */
- function startup() {
-  canvas = document.getElementById("myGLCanvas");
-  gl = createGLContext(canvas);
-  setupShaders(); 
-  setupBuffers(numCircleVerts);
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
-  tick();
+function startup() {
+    canvas = document.getElementById("myGLCanvas");
+    gl = createGLContext(canvas);
+    setupShaders();
+    setupBuffers(numCircleVerts);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+    tick();
 }
 
 /**
@@ -297,7 +300,8 @@ function tick() {
 /**
  * Animation to be called from tick. Updates globals and performs animation for each tick.
  */
-function animate() { 
-    defAngle= (defAngle+1.0) % 360;
+function animate() {
+    //转速
+    defAngle = (defAngle + 4.0) % 360;
     loadVertices(numCircleVerts); // Needs to happen to see the geometry change
 }
