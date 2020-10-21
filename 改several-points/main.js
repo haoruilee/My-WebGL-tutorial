@@ -68,6 +68,18 @@ function onClick(event, gl, canvas, a_Position, u_FragColor) {
     var rect = event.target.getBoundingClientRect();
     var x = ((event.clientX - rect.left) - canvas.width * 0.5) / (canvas.width * 0.5);
     var y = (canvas.height * 0.5 - (event.clientY - rect.top)) / (canvas.height * 0.5);
+    var vertices = new new Float32Array([x, y, x + 0.5, y + 0.5, x + 1, y]);
+    //开始复制唐慧
+    //  Configure WebGL
+    // Load the data into the GPU
+    var bufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    // Associate out shader variables with our data buffer
+    var vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+    //结束复制唐慧
     g_points.push([x, y]);
 
     // 记录颜色
@@ -83,11 +95,10 @@ function onClick(event, gl, canvas, a_Position, u_FragColor) {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     for (var i = 0; i < g_points.length; i++) {
-        var pos = g_points[i];
+        var pos = vertices;
         var rgba = g_colors[i];
-
-        gl.vertexAttrib4f(a_Position, pos[0], pos[1], 0.0, 1.0);
+        //gl.vertexAttrib4f(a_Position, pos[0], pos[1], 0.0, 1.0);
         gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-        gl.drawArrays(gl.POINTS, 0, 1);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 }
