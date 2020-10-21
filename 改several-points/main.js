@@ -62,43 +62,105 @@ function main() {
 }
 g_points = [];
 g_colors = [];
+g_tirpoint = [];
+
+function tri() {
+    var canvas = document.getElementById("container");
+    var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    initShader(gl); // 初始化着色器
+    if (!gl) { alert("WebGL isn't available"); }
+    var vertices = [
+        vec2(-1, -1),
+        vec2(0, 1),
+        vec2(1, -1)
+    ];
+
+    var vertexColors = [
+        vec4(1.0, 0.0, 0.0, 1.0), // red
+        vec4(0.0, 1.0, 0.0, 1.0), // green
+        vec4(0.0, 0.0, 1.0, 1.0) // blue
+    ];
+
+
+    //  Configure WebGL
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+
+    //  Load shaders and initialize attribute buffers
+
+    var program = initShaders(gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(program);
+
+    // color array atrribute buffer
+
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW);
+
+    var vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vColor);
+
+    // Load the data into the GPU    
+    var bufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
+
+    // Associate out shader variables with our data buffer    
+    var vPosition = gl.getAttribLocation(program, "vPosition");
+    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+};
+
 
 function onClick(event, gl, canvas, a_Position, u_FragColor) {
     // 记录鼠标点击过的位置
     var rect = event.target.getBoundingClientRect();
     var x = ((event.clientX - rect.left) - canvas.width * 0.5) / (canvas.width * 0.5);
     var y = (canvas.height * 0.5 - (event.clientY - rect.top)) / (canvas.height * 0.5);
-    var vertices = new new Float32Array([x, y, x + 0.5, y + 0.5, x + 1, y]);
-    //开始复制唐慧
-    //  Configure WebGL
-    // Load the data into the GPU
-    var bufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    // Associate out shader variables with our data buffer
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-    //结束复制唐慧
-    g_points.push([x, y]);
-
     // 记录颜色
     if (x >= 0 && y >= 0) {
-        g_colors.push([162 / 255.0, 130 / 255.0, 37 / 255.0, 1.0]); // 第一象限
+        //三角形
+        tri()
     } else if (x < 0 && y > 0) {
+        g_points.push([x, y]);
         g_colors.push([0.0, 1.0, 0.0, 1.0]); // 第二象限
-    } else if (x < 0 && y < 0) {
-        g_colors.push([0.0, 0.5, 1.0, 1.0]); // 第三象限
-    } else {
-        g_colors.push([1.0, 1.0, 0.0, 1.0]); // 第四象限
-    }
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        for (var i = 0; i < g_points.length; i++) {
+            var pos = g_points[i];
+            var rgba = g_colors[i];
 
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    for (var i = 0; i < g_points.length; i++) {
-        var pos = vertices;
-        var rgba = g_colors[i];
-        //gl.vertexAttrib4f(a_Position, pos[0], pos[1], 0.0, 1.0);
-        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.vertexAttrib4f(a_Position, pos[0], pos[1], 0.0, 1.0);
+            gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+            gl.drawArrays(gl.POINTS, 0, 1);
+        }
+    } else if (x < 0 && y < 0) {
+        g_points.push([x, y]);
+        g_colors.push([0.0, 0.5, 1.0, 1.0]); // 第三象限
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        for (var i = 0; i < g_points.length; i++) {
+            var pos = g_points[i];
+            var rgba = g_colors[i];
+
+            gl.vertexAttrib4f(a_Position, pos[0], pos[1], 0.0, 1.0);
+            gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+            gl.drawArrays(gl.POINTS, 0, 1);
+        }
+    } else {
+        g_points.push([x, y]);
+        g_colors.push([1.0, 1.0, 0.0, 1.0]); // 第四象限
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        for (var i = 0; i < g_points.length; i++) {
+            var pos = g_points[i];
+            var rgba = g_colors[i];
+
+            gl.vertexAttrib4f(a_Position, pos[0], pos[1], 0.0, 1.0);
+            gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+            gl.drawArrays(gl.POINTS, 0, 1);
+        }
     }
 }
