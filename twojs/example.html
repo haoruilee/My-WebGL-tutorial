@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="js/two.min.js"></script>
+  </head>
+  <body>
+    <script>
+      var two = new Two({
+        fullscreen: true,
+        autostart: true
+      }).appendTo(document.body);
+      
+
+      var eyeball = two.makeCircle(172, 100, 10);
+      eyeball.fill = 'rgb(0, 200, 255)';
+      eyeball.opacity = 0.75;
+      eyeball.noStroke();
+      two.bind('update', function() {
+        eyeball.rotation += 0.001;
+      });
+    </script>
+  </body>
+</html>

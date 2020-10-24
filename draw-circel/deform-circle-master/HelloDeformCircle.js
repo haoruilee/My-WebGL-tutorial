@@ -180,7 +180,8 @@ function loadVertices(numVertices) {
     vertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionBuffer);
 
-    // Start with vertex at the origin    
+    // Start with vertex at the origin
+    //三角尖的位置    
     var triangleVertices = [0.0, 0.0, 0.0];
 
     //Generate a triangle fan around origin

@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="js/two.min.js"></script>
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
 attribute  vec4 vColor;
 varying vec4 fColor;
 
+
 void main()
 {
     fColor = vColor;
     gl_Position = vPosition;
+    
 }
 </script>
 
@@ -30,6 +33,29 @@ void main()
 </head>
 
 <body>
+    <script>
+        var two = new Two({
+          fullscreen: true,
+          autostart: true
+        }).appendTo(document.body);
+        
+  
+        var eyeball = two.makeCircle(232, 140, 13);
+        eyeball.fill = 'rgb(0, 200, 255)';
+        eyeball.opacity = 0.75;
+        eyeball.noStroke();
+        two.bind('update', function() {
+          eyeball.rotation += 0.001;
+        });
+
+        var eyeball2 = two.makeCircle(302, 140, 13);
+        eyeball2.fill = 'rgb(0, 200, 255)';
+        eyeball2.opacity = 0.75;
+        eyeball2.noStroke();
+        two.bind('update', function() {
+          eyeball2.rotation += 0.001;
+        });
+      </script>
 <canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>

@@ -3,46 +3,46 @@
 <head>
 <title> Jyotsna 76830614 </title>
 <script id="vertex-shader" type="x-shader/x-vertex">
-attribute vec4 vPosition;
-attribute vec4 vColor;
-attribute vec2 vCenter;
-attribute float vRadius;
+attribute vec4 g_vPosition;
+attribute vec4 g_vColor;
+attribute vec2 g_vCenter;
+attribute float g_vRadius;
 
-varying vec2 fPosition;
-varying vec4 fColor;
-varying vec2 fCenter;
-varying float fRadius;
-varying vec2 fTP;
+varying vec2 g_fPosition;
+varying vec4 g_fColor;
+varying vec2 g_fCenter;
+varying float g_fRadius;
+varying vec2 g_fTP;
 
 void
 main()
 {    
-    gl_Position = vPosition;
-	fTP = vec2(vPosition.x, vPosition.y);
-	fPosition = vec2(vPosition.x, vPosition.y);
-	fColor = vColor;
-	fCenter = vCenter;
-	fRadius = vRadius;    
+    gl_Position = g_vPosition;
+	g_fTP = vec2(g_vPosition.x, g_vPosition.y);
+	g_fPosition = vec2(g_vPosition.x, g_vPosition.y);
+	g_fColor = g_vColor;
+	g_fCenter = g_vCenter;
+	g_fRadius = g_vRadius;    
 }
 </script>
 
 <script id="fragment-shader" type="x-shader/x-fragment">
 precision mediump float;
-varying vec2 fTP;
-varying vec2 fPosition;
-varying vec4 fColor;
-varying vec2 fCenter;
-varying float fRadius;
+varying vec2 g_fTP;
+varying vec2 g_fPosition;
+varying vec4 g_fColor;
+varying vec2 g_fCenter;
+varying float g_fRadius;
 
 void
 main()
 {
 	//gl_FragColor = fColor;
-	vec2 center = fCenter;
-	float distance = length((fTP - center));
+	vec2 g_center = g_fCenter;
+	float g_distance = length((g_fTP - g_center));
 	
-	if (distance < fRadius) {
-		gl_FragColor = fColor;
+	if (g_distance < g_fRadius) {
+		gl_FragColor = g_fColor;
 	} 
 }
 </script>

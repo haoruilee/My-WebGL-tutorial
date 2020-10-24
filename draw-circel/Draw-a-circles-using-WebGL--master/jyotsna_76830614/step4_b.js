@@ -232,22 +232,22 @@ window.onload = function init() {
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(g_dat_radius));
 
     // Associate out shader variables with our data buffer    
-    var vPosition = gl.getAttribLocation(g_program, "vPosition");
+    var g_vPosition = gl.getAttribLocation(g_program, "g_vPosition");
     gl.bindBuffer(gl.ARRAY_BUFFER, g_vbo_points);
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
+    gl.vertexAttribPointer(g_vPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(g_vPosition);
 
-    var vColor = gl.getAttribLocation(g_program, "vColor");
+    var vColor = gl.getAttribLocation(g_program, "g_vColor");
     gl.bindBuffer(gl.ARRAY_BUFFER, g_vbo_colors);
     gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vColor);
 
-    var vCenter = gl.getAttribLocation(g_program, "vCenter");
+    var vCenter = gl.getAttribLocation(g_program, "g_vCenter");
     gl.bindBuffer(gl.ARRAY_BUFFER, g_vbo_centers);
     gl.vertexAttribPointer(vCenter, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vCenter);
 
-    var vRadius = gl.getAttribLocation(g_program, "vRadius");
+    var vRadius = gl.getAttribLocation(g_program, "g_vRadius");
     gl.bindBuffer(gl.ARRAY_BUFFER, g_vbo_radius);
     gl.vertexAttribPointer(vRadius, 1, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vRadius);

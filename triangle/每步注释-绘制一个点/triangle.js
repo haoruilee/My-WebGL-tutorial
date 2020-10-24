@@ -44,36 +44,4 @@ window.onload = function() {
     //绘制一个点
     gl.drawArrays(gl.POINTS, 0, 1);
 
-    //绘制三角形
-
-    //三角形参数，作为vertices
-    //-1,-1是第一个点的坐标，0,1是第二个点的坐标，1,-1是第三个点的坐标，前三个点组成一个片元，后面继续写是新片元
-    var vertices = new Float32Array([-1, -0.5, 0, 1, 1, -1,
-        1, -0.5, 0.5, 0.5, 1, 1, -1, 1, 0, 0, 1, 1
-    ]);
-
-    //  Configure WebGL
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    //一定要写！清空背景颜色，不然在A卡上会花
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-
-    //  Load shaders and initialize attribute buffers
-
-    var program = initShaders(gl, "vertex-shader", "fragment-shader");
-    gl.useProgram(program);
-
-    // Load the data into the GPU
-
-    var bufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 9);
 }
