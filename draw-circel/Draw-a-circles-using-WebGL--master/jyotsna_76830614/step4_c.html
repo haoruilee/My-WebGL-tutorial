@@ -37,10 +37,8 @@ varying float fRadius;
 void
 main()
 {
-	//gl_FragColor = fColor;
 	vec2 center = fCenter;
 	float distance = length((fTP - center));
-	
 	if (distance < fRadius) {
 		gl_FragColor = fColor;
 	} 
