@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="js/jquery-3.1.1.min.js"></script>
 <script src="js/two.min.js"></script>
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
@@ -34,22 +35,27 @@ void main()
 
 <body>
     <script>
+        //Create the variables that will hold the position of the mouse
+        //To pass it as position of the circle
+        var delta = new Two.Vector();
+        var mouse = new Two.Vector();
+
         var two = new Two({
           fullscreen: true,
           autostart: true
         }).appendTo(document.body);
         
-  
-        var eyeball = two.makeCircle(232, 140, 13);
-        eyeball.fill = 'rgb(0, 200, 255)';
+        
+        var eyeball = two.makeCircle(232, 140, 10);
+        eyeball.fill = 'rgb(150, 100, 255)';
         eyeball.opacity = 0.75;
         eyeball.noStroke();
         two.bind('update', function() {
           eyeball.rotation += 0.001;
         });
 
-        var eyeball2 = two.makeCircle(302, 140, 13);
-        eyeball2.fill = 'rgb(0, 200, 255)';
+        var eyeball2 = two.makeCircle(302, 140, 10);
+        eyeball2.fill = 'rgb(150, 100, 255)';
         eyeball2.opacity = 0.75;
         eyeball2.noStroke();
         two.bind('update', function() {

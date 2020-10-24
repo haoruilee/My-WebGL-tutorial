@@ -6,19 +6,27 @@
   </head>
   <body>
     <script>
-      var two = new Two({
-        fullscreen: true,
-        autostart: true
-      }).appendTo(document.body);
-      
+      // Make an instance of two and place it on the page.
+        var elem = document.getElementById('draw-shapes');
+        var params = { width: 285, height: 200 };
+        var two = new Two(params).appendTo(elem);
 
-      var eyeball = two.makeCircle(172, 100, 10);
-      eyeball.fill = 'rgb(0, 200, 255)';
-      eyeball.opacity = 0.75;
-      eyeball.noStroke();
-      two.bind('update', function() {
-        eyeball.rotation += 0.001;
-      });
+        // two has convenience methods to create shapes.
+        var circle = two.makeCircle(72, 100, 50);
+        var rect = two.makeRectangle(213, 100, 100, 100);
+
+        // The object returned has many stylable properties:
+        circle.fill = '#FF8000';
+        circle.stroke = 'orangered'; // Accepts all valid css color
+        circle.linewidth = 5;
+
+        rect.fill = 'rgb(0, 200, 255)';
+        rect.opacity = 0.75;
+        rect.noStroke();
+
+        // Don't forget to tell two to render everything
+        // to the screen
+        two.update();
     </script>
   </body>
 </html>

@@ -8,6 +8,7 @@ var vColor,vColor2;
 var bufferId, bufferId2;
 var program;
 
+
 window.onload = function init()
 {
     var canvas = document.getElementById( "gl-canvas" );
