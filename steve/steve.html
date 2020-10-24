@@ -34,36 +34,54 @@ void main()
 </head>
 
 <body>
-    <script>
-        //Create the variables that will hold the position of the mouse
-        //To pass it as position of the circle
-        var delta = new Two.Vector();
-        var mouse = new Two.Vector();
-
-        var two = new Two({
-          fullscreen: true,
-          autostart: true
-        }).appendTo(document.body);
-        
-        
-        var eyeball = two.makeCircle(232, 140, 10);
-        eyeball.fill = 'rgb(150, 100, 255)';
-        eyeball.opacity = 0.75;
-        eyeball.noStroke();
-        two.bind('update', function() {
-          eyeball.rotation += 0.001;
-        });
-
-        var eyeball2 = two.makeCircle(302, 140, 10);
-        eyeball2.fill = 'rgb(150, 100, 255)';
-        eyeball2.opacity = 0.75;
-        eyeball2.noStroke();
-        two.bind('update', function() {
-          eyeball2.rotation += 0.001;
-        });
-      </script>
 <canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
 </body>
+<script>
+  
+  //Create the variables that will hold the position of the mouse
+  //To pass it as position of the circle
+  //有可能是full screen原因
+  var params = {
+    fullscreen: true,
+    autostart: true
+  };
+  var two = new Two(params).appendTo(document.body);
+  
+  //Create the variables that will hold the position of the mouse
+  //To pass it as position of the circle
+  var delta = new Two.Vector();
+  var mouse = new Two.Vector();
+  var radius = 5;
+  
+  var eyeball = two.makeCircle(232, 140, radius);
+  eyeball.fill = 'rgb(150, 100, 255)';
+  //eyeball.opacity = 0.75;
+  eyeball.noStroke();
+
+  var eyeball2 = two.makeCircle(302, 140, 5);
+  eyeball2.fill = 'rgb(150, 100, 255)';
+  //eyeball2.opacity = 0.75;
+  eyeball2.noStroke();
+
+  var $window = $(window)
+    .bind('touchstart', function() {
+        e.preventDefault();
+        return false;
+    })
+    //Here we are using the click event in order to make the circle larger
+    .click(function(e) {
+      if(eyeball2.radius<30){
+        eyeball2.radius = eyeball2.radius + eyeball2.radius*0.1;
+      };
+    })
+
+  two.bind('update', function() {
+    delta.copy(mouse).subSelf(eyeball2.translation);        //Here is the difference between the vectors of current and previous positions.
+    eyeball2.translation.addSelf(delta);                    //Here we are adding the new vector to the last position, to move the circle.
+  }).play(); //we would need .play() if it was not autostart
+
+</script>
+
 </html>

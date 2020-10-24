@@ -9,12 +9,26 @@ var bufferId, bufferId2;
 var program;
 
 
+var N = 100;
+var vertexData = [0.0, 0.0];
+var r = 0.5;
+
+
 window.onload = function init()
 {
     var canvas = document.getElementById( "gl-canvas" );
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
+
+    for (var i = 0; i <= N; i++) {
+        var theta = i * 2 * Math.PI / N;
+        var x = r * Math.sin(theta);
+        var y = r * Math.cos(theta);
+        vertexData.push(x, y);
+    }
+
+    var eye_vertices = new Float32Array(vertexData);
 
 
     var vertices = [
@@ -178,6 +192,14 @@ window.onload = function init()
         vec4(0, 0, 0, 1.0),   // blue
 
     ];
+
+    var vertexColors_eye = [
+        vec4(1, 0, 0, 1.0),  // red
+        vec4(1, 0, 0, 1.0),  // green
+        vec4(1, 0, 0, 1.0),  // blue
+        vec4(0, 0, 0, 1.0),   // blue
+
+    ];
     //  Configure WebGL
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -187,6 +209,29 @@ window.onload = function init()
 
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram(program);
+///////////////////////////////////////////////eyeball////////////////////////////////
+    eye_cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, eye_cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors_eye), gl.STATIC_DRAW);
+
+    eye_vColor = gl.getAttribLocation(program, "vColor");
+    gl.vertexAttribPointer(eye_vColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(eye_vColor);
+
+    // Load the data into the GPU
+    eye_bufferId = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, eye_bufferId );
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(eye_vertices), gl.STATIC_DRAW);
+
+    // Associate out shader variables with our data buffer
+    eye_vPosition= gl.getAttribLocation( program, "vPosition" );
+    gl.vertexAttribPointer( eye_vPosition, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( eye_vPosition);
+
+    
+    initVertexBuffers(gl, eye_vertices);
+    
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, eye_vertices.length / 2);
 ///////////////////////////////////////////////hair////////////////////////////////////////////////////////
     // color array atrribute buffer
 
@@ -329,7 +374,7 @@ window.onload = function init()
     gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition2 );
     render7();
-            ////////////////////////////////////////////beard3///////////////////////////////////////////////////
+    ////////////////////////////////////////////beard3///////////////////////////////////////////////////
 
     cBuffer2 = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);

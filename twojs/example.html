@@ -3,30 +3,64 @@
   <head>
     <meta charset="utf-8">
     <script src="js/two.min.js"></script>
+    <script src="js/jquery-3.1.1.min.js"></script>
   </head>
   <body>
-    <script>
-      // Make an instance of two and place it on the page.
-        var elem = document.getElementById('draw-shapes');
-        var params = { width: 285, height: 200 };
-        var two = new Two(params).appendTo(elem);
-
-        // two has convenience methods to create shapes.
-        var circle = two.makeCircle(72, 100, 50);
-        var rect = two.makeRectangle(213, 100, 100, 100);
-
-        // The object returned has many stylable properties:
-        circle.fill = '#FF8000';
-        circle.stroke = 'orangered'; // Accepts all valid css color
-        circle.linewidth = 5;
-
-        rect.fill = 'rgb(0, 200, 255)';
-        rect.opacity = 0.75;
-        rect.noStroke();
-
-        // Don't forget to tell two to render everything
-        // to the screen
-        two.update();
-    </script>
+    <canvas id="gl-canvas" width="512" height="512">
+      Oops ... your browser doesn't support the HTML5 canvas element
+      </canvas>
   </body>
+  <script>
+    //Create a Two object
+    var params = {
+      width: 285, height: 200,
+      autostart: true
+    };
+    var elem = document.getElementById('draw-shapes');
+    var two = new Two(params).appendTo(elem);
+
+    //Create the variables that will hold the position of the mouse
+    //To pass it as position of the circle
+    var delta = new Two.Vector();
+    var mouse = new Two.Vector();
+
+    //The circle
+    var radius = 25;
+    var ball = two.makeCircle(two.width / 2, two.height / 2, radius);
+
+    ball.noStroke();
+
+    //The fill color of the circle, in RGB (red, green, blue) values
+    var r = 150;
+    var g = 150;
+    var b = 150;
+    ball.fill = 'rgb(' + r + ', ' + g + ', ' + b + ')';
+
+    /*
+    Here we are binding some events to our window.
+    Here, all interactions are caught.
+    */
+    var $window = $(window)
+      //Here, we are keeping the position of the mouse as it moves
+      //We will use it later
+
+      .bind('touchstart', function() {
+          e.preventDefault();
+          return false;
+      })
+
+      //Here we are using the click event in order to make the circle larger
+      .click(function(e) {
+        if(ball.radius<30){
+          ball.radius = ball.radius + ball.radius*0.1;
+        };
+      })
+
+    two.bind('update', function() {
+      delta.copy(mouse).subSelf(ball.translation);        //Here is the difference between the vectors of current and previous positions.
+      ball.translation.addSelf(delta);                    //Here we are adding the new vector to the last position, to move the circle.
+    }).play();  // Finally, start the animation loop; //we would need .play() if it was not autostart
+    two.update();
+
+  </script>
 </html>
