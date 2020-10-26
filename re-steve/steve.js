@@ -25,7 +25,6 @@ window.onload = function init()
     
     //////////////////////////////////////////////////////////////////
 	var mayugeColor = colorBuff(gl, getColors(0.34, 0.094, 0.090, 1.0, 62));
-	
 	var leftHair = positionBuff(gl, oval(-1, 1, 1.6, 0.9, 270, 360));
 	
 	enableColorBuff(gl, program, mayugeColor, "vColor");

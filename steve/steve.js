@@ -1,11 +1,6 @@
 
 
 var gl;
-var points;
-var vPosition, vPosition2;
-var cBuffer,cBuffer2;
-var vColor,vColor2;
-var bufferId, bufferId2;
 var program;
 
 window.onload = function init()
@@ -186,445 +181,417 @@ window.onload = function init()
 
     var program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram(program);
-///////////////////////////////////////////////hair////////////////////////////////////////////////////////
+
+
+function positionBuff(points) {
+	var paff = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, paff);
+	gl.bufferData(gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW);
+
+	return paff;
+}
+
+function enablePositionBuff(buff) {
+	gl.bindBuffer(gl.ARRAY_BUFFER, buff);
+	var vPosition = gl.getAttribLocation(program, "vPosition");
+	gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(vPosition);
+	return vPosition;
+}
+
+function colorBuff(color) {
+	var cBuff = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, cBuff);
+	gl.bufferData(gl.ARRAY_BUFFER, flatten(color), gl.STATIC_DRAW);
+
+	return cBuff;
+}
+
+function enableColorBuff(buff) {
+	gl.bindBuffer(gl.ARRAY_BUFFER, buff);
+	var vColor = gl.getAttribLocation(program, "vColor");
+	gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
+	gl.enableVertexAttribArray(vColor);
+	return vColor;
+}
+    ///////////////////////////////////////////////hair////////////////////////////////////////////////////////
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
     // color array atrribute buffer
-
-    cBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW);
-
-    vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
-
-    // Load the data into the GPU
-    bufferId = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition );
-    render1();
+    var cBuff1=colorBuff(vertexColors)
+    var pBuff1=positionBuff(vertices)
+    enableColorBuff(cBuff1);
+    render(enablePositionBuff(pBuff1),gl.TRIANGLE_STRIP,4,pBuff1);//
     ////////////////////////////////////////////face1/////////////////////////////////////////////////////
     //color array atrribute buffer
+    var cBuff2=colorBuff(vertexColors2)
+    var pBuff2=positionBuff(vertices2)
+    enableColorBuff(cBuff2);
+    render(enablePositionBuff(pBuff2),gl.TRIANGLE_STRIP,4,pBuff2);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors2), gl.STATIC_DRAW);
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId2 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId2 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices2), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render2();
     ////////////////////////////////////////////face2///////////////////////////////////////////////////
+    var cBuff3=colorBuff(vertexColors2)
+    var pBuff3=positionBuff(vertices3)
+    enableColorBuff(cBuff3);
+    render(enablePositionBuff(pBuff3),gl.TRIANGLE_STRIP,4,pBuff3);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors2), gl.STATIC_DRAW);
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId3 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId3 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices3), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render3();
         ////////////////////////////////////////////eye1///////////////////////////////////////////////////
+    var cBuff4=colorBuff(vertexColors3)
+    var pBuff4=positionBuff(vertices4)
+    enableColorBuff(cBuff4);
+    render(enablePositionBuff(pBuff4),gl.TRIANGLE_STRIP,4,pBuff4);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors3), gl.STATIC_DRAW);
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId4 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId4 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices4), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render4();
     ////////////////////////////////////////////eye2///////////////////////////////////////////////////
+    var cBuff5=colorBuff(vertexColors3)
+    var pBuff5=positionBuff(vertices5)
+    enableColorBuff(cBuff5);
+    render(enablePositionBuff(pBuff5),gl.TRIANGLE_STRIP,4,pBuff5);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors3), gl.STATIC_DRAW);
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId5 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId5 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices5), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render5();
     ////////////////////////////////////////////beard1///////////////////////////////////////////////////
+    var cBuff6=colorBuff(vertexColors)
+    var pBuff6=positionBuff(vertices6)
+    enableColorBuff(cBuff6);
+    render(enablePositionBuff(pBuff6),gl.TRIANGLE_STRIP,4,pBuff6);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW);
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId6 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId6 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices6), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render6();
         ////////////////////////////////////////////beard2///////////////////////////////////////////////////
+    var cBuff7=colorBuff(vertexColors)
+    var pBuff7=positionBuff(vertices7)
+    enableColorBuff(cBuff7);
+    render(enablePositionBuff(pBuff7),gl.TRIANGLE_STRIP,4,pBuff7);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId7 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId7 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices7), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render7();
             ////////////////////////////////////////////beard3///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors)
+    var pBuff=positionBuff(vertices8)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW);
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId8 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId8 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices8), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render8();
   ////////////////////////////////////////////cloth///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors4)
+    var pBuff=positionBuff(vertices9)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors4), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId9 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId9 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices9), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render9();
      ////////////////////////////////////////////neck///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors2)
+    var pBuff=positionBuff(vertices10)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors2), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId10 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId10 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices10), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render10();
     ////////////////////////////////////////////arms///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors2)
+    var pBuff=positionBuff(vertices11)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors2), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId11 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId11 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices11), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render11();
         ////////////////////////////////////////////arms///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors2)
+    var pBuff=positionBuff(vertices12)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors2), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId12 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId12 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices12), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render12();
             ////////////////////////////////////////////pants1///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors5)
+    var pBuff=positionBuff(vertices13)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors5), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId13 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId13 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices13), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render13();
 ////////////////////////////////////////////pants2///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors6)
+    var pBuff=positionBuff(vertices14)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors6), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId14 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId14 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices14), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render14();
     ////////////////////////////////////////////shoes1///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors4)
+    var pBuff=positionBuff(vertices16)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors4), gl.STATIC_DRAW);
-
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
-
-    // Load the data into the GPU
-    bufferId15 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId15 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices16), gl.STATIC_DRAW);
-
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render15();
     ////////////////////////////////////////////shoes2///////////////////////////////////////////////////
+    var cBuff=colorBuff(vertexColors4)
+    var pBuff=positionBuff(vertices17)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
-    cBuffer2 = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer2);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors4), gl.STATIC_DRAW);
+    ////////////////////////////////////////////nose///////////////////////////////////////////////////
+    var N = 10000;
+    var center=vec2(0.05, 0.45)
+    var vertexData = [center];
+    var r = 0.05;
 
-    vColor2 = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor2);
+    for (var i = 0; i <= N; i++) {
+        var theta = i * 2 * Math.PI / N;
+        var x = center[0]+r * Math.sin(theta);
+        var y = center[1]+ r * Math.cos(theta);
+        var point = vec2(x, y);
+        vertexData.push(point);
+     }
+    vertexColorsnose=[vec4(1,0.772,0.65,1)]
+    for (var i = 0; i <= N; i++) {
+        point=vec4(1,0.772,0.65,1)
+        vertexColorsnose.push(point);
+     }
+    var cBuff=colorBuff(vertexColorsnose)
+    var pBuff=positionBuff(vertexData)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_FAN,vertexData.length,pBuff);
 
-    // Load the data into the GPU
-    bufferId16 = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId16 );
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(vertices17), gl.STATIC_DRAW);
+        ////////////////////////////////////////////eye1///////////////////////////////////////////////////
+    var vertices18= [
+        vec2(-0.1, 0.4),
+        vec2(0,  0.4),
+        vec2(-0.1,0.5),
+        vec2(0, 0.5)
 
-    // Associate out shader variables with our data buffer
-    vPosition2 = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition2 );
-    render16();
+    ];
+    var cBuff=colorBuff(vertexColors4)
+    var pBuff=positionBuff(vertices18)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+
+////////////////////////////////////////////eye2///////////////////////////////////////////////////
+    
+        //onmousedown检测鼠标点击
+        var vertices19= [
+            vec2(0.1, 0.4),
+            vec2(0.2,  0.4),
+            vec2(0.1,0.5),
+            vec2(0.2, 0.5)
+
+        ];
+        var cBuff=colorBuff(vertexColors4)
+        var pBuff=positionBuff(vertices19)
+        enableColorBuff(cBuff);
+        render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+
+
+    ////////////////////////////////////////////sun///////////////////////////////////////////////////
+    var N = 10000;
+    var center=vec2(0.8, 0.8)
+    var vertexData = [center];
+    var r = 0.2;
+
+    for (var i = 0; i <= N; i++) {
+        var theta = i * 2 * Math.PI / N;
+        var x = center[0]+r * Math.sin(theta);
+        var y = center[1]+ r * Math.cos(theta);
+        var point = vec2(x, y);
+        vertexData.push(point);
+     }
+    vertexColorssun=[vec4(1,0.784,0.156,1)]
+    for (var i = 0; i <= N; i++) {
+        point=vec4(1,1,1,1)
+        vertexColorssun.push(point);
+     }
+    var cBuff=colorBuff(vertexColorssun)
+    var pBuff=positionBuff(vertexData)
+    enableColorBuff(cBuff);
+    headmain(gl)
+    
+
+    function headmain()
+    {
+     ///////////////////////////////////////////////hair////////////////////////////////////////////////////////
+    
+     gl.clear(gl.COLOR_BUFFER_BIT);
+     // color array atrribute buffer
+     var cBuff1=colorBuff(vertexColors)
+     var pBuff1=positionBuff(vertices)
+     enableColorBuff(cBuff1);
+     render(enablePositionBuff(pBuff1),gl.TRIANGLE_STRIP,4,pBuff1);//
+     ////////////////////////////////////////////face1/////////////////////////////////////////////////////
+     //color array atrribute buffer
+     var cBuff2=colorBuff(vertexColors2)
+     var pBuff2=positionBuff(vertices2)
+     enableColorBuff(cBuff2);
+     render(enablePositionBuff(pBuff2),gl.TRIANGLE_STRIP,4,pBuff2);
+    
+    
+     ////////////////////////////////////////////face2///////////////////////////////////////////////////
+     var cBuff3=colorBuff(vertexColors2)
+     var pBuff3=positionBuff(vertices3)
+     enableColorBuff(cBuff3);
+     render(enablePositionBuff(pBuff3),gl.TRIANGLE_STRIP,4,pBuff3);
+    
+    
+         ////////////////////////////////////////////eye1///////////////////////////////////////////////////
+     var cBuff4=colorBuff(vertexColors3)
+     var pBuff4=positionBuff(vertices4)
+     enableColorBuff(cBuff4);
+     render(enablePositionBuff(pBuff4),gl.TRIANGLE_STRIP,4,pBuff4);
+    
+    
+     ////////////////////////////////////////////eye2///////////////////////////////////////////////////
+     var cBuff5=colorBuff(vertexColors3)
+     var pBuff5=positionBuff(vertices5)
+     enableColorBuff(cBuff5);
+     render(enablePositionBuff(pBuff5),gl.TRIANGLE_STRIP,4,pBuff5);
+    
+    
+     ////////////////////////////////////////////beard1///////////////////////////////////////////////////
+     var cBuff6=colorBuff(vertexColors)
+     var pBuff6=positionBuff(vertices6)
+     enableColorBuff(cBuff6);
+     render(enablePositionBuff(pBuff6),gl.TRIANGLE_STRIP,4,pBuff6);
+    
+    
+         ////////////////////////////////////////////beard2///////////////////////////////////////////////////
+     var cBuff7=colorBuff(vertexColors)
+     var pBuff7=positionBuff(vertices7)
+     enableColorBuff(cBuff7);
+     render(enablePositionBuff(pBuff7),gl.TRIANGLE_STRIP,4,pBuff7);
+    
+             ////////////////////////////////////////////beard3///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors)
+     var pBuff=positionBuff(vertices8)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+    
+    ////////////////////////////////////////////cloth///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors4)
+     var pBuff=positionBuff(vertices9)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+      ////////////////////////////////////////////neck///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors2)
+     var pBuff=positionBuff(vertices10)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+     ////////////////////////////////////////////arms///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors2)
+     var pBuff=positionBuff(vertices11)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+         ////////////////////////////////////////////arms///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors2)
+     var pBuff=positionBuff(vertices12)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+             ////////////////////////////////////////////pants1///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors5)
+     var pBuff=positionBuff(vertices13)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+    ////////////////////////////////////////////pants2///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors6)
+     var pBuff=positionBuff(vertices14)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+     ////////////////////////////////////////////shoes1///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors4)
+     var pBuff=positionBuff(vertices16)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+     ////////////////////////////////////////////shoes2///////////////////////////////////////////////////
+     var cBuff=colorBuff(vertexColors4)
+     var pBuff=positionBuff(vertices17)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+     ////////////////////////////////////////////nose///////////////////////////////////////////////////
+     var N = 10000;
+     var center=vec2(0.05, 0.45)
+     var vertexData = [center];
+     var r = 0.05;
+    
+     for (var i = 0; i <= N; i++) {
+         var theta = i * 2 * Math.PI / N;
+         var x = center[0]+r * Math.sin(theta);
+         var y = center[1]+ r * Math.cos(theta);
+         var point = vec2(x, y);
+         vertexData.push(point);
+      }
+     vertexColorsnose=[vec4(1,0.772,0.65,1)]
+     for (var i = 0; i <= N; i++) {
+         point=vec4(1,0.772,0.65,1)
+         vertexColorsnose.push(point);
+      }
+     var cBuff=colorBuff(vertexColorsnose)
+     var pBuff=positionBuff(vertexData)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_FAN,vertexData.length,pBuff);
+    
+         ////////////////////////////////////////////eye1///////////////////////////////////////////////////
+     var vertices18= [
+         vec2(-0.1, 0.4),
+         vec2(0,  0.4),
+         vec2(-0.1,0.5),
+         vec2(0, 0.5)
+    
+     ];
+     var cBuff=colorBuff(vertexColors4)
+     var pBuff=positionBuff(vertices18)
+     enableColorBuff(cBuff);
+     render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+    ////////////////////////////////////////////eye2///////////////////////////////////////////////////
+     
+         //onmousedown检测鼠标点击
+         var vertices19= [
+             vec2(0.1, 0.4),
+             vec2(0.2,  0.4),
+             vec2(0.1,0.5),
+             vec2(0.2, 0.5)
+    
+         ];
+         var cBuff=colorBuff(vertexColors4)
+         var pBuff=positionBuff(vertices19)
+         enableColorBuff(cBuff);
+         render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    
+      
+    }
+    
+    
+    canvas.onmousedown = function(event) {
+    headmain()
+    ////////////////////////////////////////////sun///////////////////////////////////////////////////
+        var N = 10000;
+        var center=vec2(0.8, 0.8)
+        var vertexData = [center];
+        var r = 0.2;
+
+        for (var i = 0; i <= N; i++) {
+            var theta = i * 2 * Math.PI / N;
+            var x = center[0]+r * Math.sin(theta);
+            var y = center[1]+ r * Math.cos(theta);
+            var point = vec2(x, y);
+            vertexData.push(point);
+        }
+        vertexColorssun=[vec4(1,0.784,0.156,1)]
+        for (var i = 0; i <= N; i++) {
+            point=vec4(1,1,1,1)
+            vertexColorssun.push(point);
+        }
+        var cBuff=colorBuff(vertexColorssun)
+        var pBuff=positionBuff(vertexData)
+        enableColorBuff(cBuff); 
+        render(enablePositionBuff(pBuff),gl.TRIANGLE_FAN,vertexData.length,pBuff);
+    }
+
+    ////////////////////////////////////////////transparent2///////////////////////////////////////////////////
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
 };
 
 
-function render1() {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
+function render(vPosition, func, pe, ID) {
+    gl.bindBuffer( gl.ARRAY_BUFFER, ID );
     gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId2 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render2() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId2 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render3() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId3 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render4() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId4 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render5() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId5 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render6() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId6 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render7() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId7 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render8() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId8 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render9() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId9 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render10() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId10 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render11() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId11 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render12() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId12 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render13() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId13 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render14() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId14 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render15() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId15 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
-}
-function render16() {
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId16 );
-    gl.vertexAttribPointer( vPosition2, 2, gl.FLOAT, false, 0, 0 );
-    gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-
+	gl.drawArrays(func, 0, pe);
 }
