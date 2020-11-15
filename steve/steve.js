@@ -237,7 +237,7 @@ function enableColorBuff(buff) {
     render(enablePositionBuff(pBuff3),gl.TRIANGLE_STRIP,4,pBuff3);
 
 
-        ////////////////////////////////////////////eye1///////////////////////////////////////////////////
+    ////////////////////////////////////////////eye1///////////////////////////////////////////////////
     var cBuff4=colorBuff(vertexColors3)
     var pBuff4=positionBuff(vertices4)
     enableColorBuff(cBuff4);
@@ -357,18 +357,18 @@ function enableColorBuff(buff) {
 
 ////////////////////////////////////////////eye2///////////////////////////////////////////////////
     
-        //onmousedown检测鼠标点击
-        var vertices19= [
-            vec2(0.1, 0.4),
-            vec2(0.2,  0.4),
-            vec2(0.1,0.5),
-            vec2(0.2, 0.5)
+    //onmousedown检测鼠标点击
+    var vertices19= [
+        vec2(0.1, 0.4),
+        vec2(0.2,  0.4),
+        vec2(0.1,0.5),
+        vec2(0.2, 0.5)
 
-        ];
-        var cBuff=colorBuff(vertexColors4)
-        var pBuff=positionBuff(vertices19)
-        enableColorBuff(cBuff);
-        render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
+    ];
+    var cBuff=colorBuff(vertexColors4)
+    var pBuff=positionBuff(vertices19)
+    enableColorBuff(cBuff);
+    render(enablePositionBuff(pBuff),gl.TRIANGLE_STRIP,4,pBuff);
 
 
     ////////////////////////////////////////////sun///////////////////////////////////////////////////
@@ -555,7 +555,6 @@ function enableColorBuff(buff) {
     
       
     }
-    
     
     canvas.onmousedown = function(event) {
     headmain()
