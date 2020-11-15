@@ -2,6 +2,14 @@
 var 	trackingMouse = false;
 var   trackballMove = false;
 
+//测试多种buffer
+var iBufferCubeID, cBufferCubeID, vBufferCubeID; //������� 3�� buffer
+var cBufferTetraID, vBufferTetraID; //������� 2�� buffer
+var vColor, vPosition;
+var vColor2, vPosition2;
+
+
+
 var VSHADER_SOURCE ="" +
 "attribute vec4 a_Position;\n" + //顶点位置变量
 "attribute vec4 a_Normal;\n" + //顶点法向量变量
@@ -34,7 +42,11 @@ var TetraTx = 0;
 
 var curx=0, cury=0;
 
-
+//创建一个视点(view) 射影(projection) 矩阵(matrix)
+var viewProjMatrix = new Matrix4();
+var viewIndex = 0; // 视图编号
+viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+viewProjMatrix.lookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 //主函数，页面加载完成触发
 function main() {
@@ -61,6 +73,10 @@ if(n < 0){
     return;
 }
 
+//测试Buffer////////////
+
+///////////////////////////
+
 //初始化底色和开启隐藏面消除
 gl.clearColor(0.0,0.0,0.0,0.0);
 gl.enable(gl.DEPTH_TEST);
@@ -73,10 +89,7 @@ if(!u_NormalMatrix || !u_MvpMatrix){
     return;
 }
 
-//创建一个视点(view) 射影(projection) 矩阵(matrix)
-var viewProjMatrix = new Matrix4();
-viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
-viewProjMatrix.lookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
 //添加键盘按键交互事件
 document.onkeydown = function (e) {
     keydown(e, gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
@@ -90,7 +103,23 @@ document.getElementById("Right").onclick = function() {
     CubeTx += 1;
     draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 };
-
+/////////////////////////////////////////////////////////////////////////
+//调整相机位置
+document.getElementById("adjustView").onclick = function() {
+    if (viewIndex === 0) {
+        viewIndex = 1;
+        // 调整视点(view) 射影(projection) 矩阵(matrix)
+        viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+        viewProjMatrix.lookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+    } else if (viewIndex === 1) {
+        viewIndex = 0;
+        // 调整视点(view) 射影(projection) 矩阵(matrix)
+        viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+        viewProjMatrix.lookAt(20.0, 20.0, 10.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+    }
+};
 canvas.addEventListener("mousedown", function(event){
     curx += 2*event.clientX/canvas.width-1;
     trackingMouse = true;
