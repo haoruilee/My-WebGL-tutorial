@@ -2,11 +2,7 @@
 var 	trackingMouse = false;
 var   trackballMove = false;
 
-//测试多种buffer
-var iBufferCubeID, cBufferCubeID, vBufferCubeID; //������� 3�� buffer
-var cBufferTetraID, vBufferTetraID; //������� 2�� buffer
-var vColor, vPosition;
-var vColor2, vPosition2;
+
 
 
 
@@ -18,11 +14,11 @@ var VSHADER_SOURCE ="" +
 "varying vec4 v_Color;\n" + //顶点颜色
 "void main(){\n" +
 "   gl_Position = u_MvpMatrix * a_Position;\n" +
-"   vec3 lightDirection = normalize(vec3(0.0,0.5,0.7));\n" +
+"   vec3 lightDirection = normalize(vec3(0.0,0.5,0.7));\n" +//光照法向量归一化
 //"   vec4 color = vec4(1.0,0.4,0.0,1.0);\n" +
 "   vec4 color = vec4(1.0,1.0,1.0,1.0);\n" +
 "   vec3 normal = normalize((u_NormalMatrix * a_Normal).xyz);\n" +
-"   float nDotL = max(dot(normal, lightDirection), 0.0);\n" +
+"   float nDotL = max(dot(normal, lightDirection), 0.0);\n" +//计算光线向量与法向量的点积
 "   v_Color = vec4(color.rgb * nDotL + vec3(0.1), color.a);\n" +
 "}";
 
@@ -72,10 +68,6 @@ if(n < 0){
     console.log("无法设置缓冲区的相关信息");
     return;
 }
-
-//测试Buffer////////////
-
-///////////////////////////
 
 //初始化底色和开启隐藏面消除
 gl.clearColor(0.0,0.0,0.0,0.0);
