@@ -1,7 +1,7 @@
-// 顶点着色器
+//记录鼠标移动
 var 	trackingMouse = false;
 var   trackballMove = false;
-
+// 顶点着色器
 var VSHADER_SOURCE ="" +
 "attribute vec4 a_Position;\n" + //顶点位置变量
 "attribute vec4 a_Normal;\n" + //顶点法向量变量
@@ -34,6 +34,113 @@ var TetraTx = 0;
 
 var curx=0, cury=0;
 
+////////////////////////尝试纹理映射/////////////
+
+/* 三、 设置顶点坐标和纹理坐标*/
+function initVertexBuffer(gl) {
+
+    // 创建顶点坐标和纹理坐标
+    var verticesTexCoords = new Float32Array([
+        // 顶点坐标， 纹理坐标
+        -0.5,  0.5,  0.0, 1.0,
+        -0.5, -0.5,  0.0, 0.0,
+        0.5,  0.5,  1.0, 1.0,
+        0.5, -0.5,  1.0, 0.0
+    ]);
+
+    var n = 4;
+
+    // 创建缓冲区
+    var vertexTexCoordBuffer = gl.createBuffer();
+    if (!vertexTexCoordBuffer) {
+        console.log('创建缓冲区失败！');
+        return -1;
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
+
+    var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
+
+    var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+    if (a_Position < 0) {
+        console.log('获取 attribute 变量 a_Position 失败！');
+        return -1;
+    }
+
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
+    gl.enableVertexAttribArray(a_Position);
+
+    var a_TexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
+    if (a_TexCoord < 0) {
+        console.log('获取 attribute 变量 a_TexCoord 失败！');
+        return -1;
+    }
+
+    gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
+    gl.enableVertexAttribArray(a_TexCoord);
+
+    return n;
+
+}
+
+/* 四、创建纹理对象并调用纹理绘制方法 */
+function initTextures(gl, n) {
+
+    // 创建纹理对象
+    var texture = gl.createTexture();
+    if (!texture) {
+        console.log('创建纹理对象失败！');
+        return false;
+    }
+
+    // 获取 u_Sampler 的存储位置
+    var u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler');
+    if (!u_Sampler) {
+        console.log('获取 uniform 变量 u_Sampler 失败！');
+        return false;
+    }
+
+    // 创建 Image 对象
+    var image = new Image();
+    image.onload = function (ev) {
+        loadTexture(gl, n, texture, u_Sampler, image);
+    };
+
+    image.src = '云朵.png';
+
+    return true;
+
+}
+
+/* 五、设置纹理相关信息 */
+function loadTexture(gl, n, texture, u_Sampler, image) {
+
+    // 对纹理图形进行y轴反转
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+
+    // 开启0号纹理单元
+    gl.activeTexture(gl.TEXTURE0);
+
+    // 向target绑定纹理对象
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // 配置纹理参数
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+    // 配置纹理对象
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+
+    // 将0号纹理单元传递给取样器变量
+    gl.uniform1i(u_Sampler, 0);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
+
+}
+
+////////////////////////////////////////
 
 
 //主函数，页面加载完成触发
