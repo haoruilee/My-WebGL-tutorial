@@ -1,7 +1,15 @@
-//记录鼠标移动
+// 顶点着色器
 var 	trackingMouse = false;
 var   trackballMove = false;
-// 顶点着色器
+
+//测试多种buffer
+var iBufferCubeID, cBufferCubeID, vBufferCubeID; //������� 3�� buffer
+var cBufferTetraID, vBufferTetraID; //������� 2�� buffer
+var vColor, vPosition;
+var vColor2, vPosition2;
+
+
+
 var VSHADER_SOURCE ="" +
 "attribute vec4 a_Position;\n" + //顶点位置变量
 "attribute vec4 a_Normal;\n" + //顶点法向量变量
@@ -11,8 +19,8 @@ var VSHADER_SOURCE ="" +
 "void main(){\n" +
 "   gl_Position = u_MvpMatrix * a_Position;\n" +
 "   vec3 lightDirection = normalize(vec3(0.0,0.5,0.7));\n" +
-//"   vec4 color = vec4(1.0,0.4,0.0,1.0);\n" +
-"   vec4 color = vec4(1.0,1.0,1.0,1.0);\n" +
+"   vec4 color = vec4(1.0,0.4,0.0,1.0);\n" +
+//"   vec4 color = vec4(1.0,1.0,1.0,1.0);\n" +
 "   vec3 normal = normalize((u_NormalMatrix * a_Normal).xyz);\n" +
 "   float nDotL = max(dot(normal, lightDirection), 0.0);\n" +
 "   v_Color = vec4(color.rgb * nDotL + vec3(0.1), color.a);\n" +
@@ -34,117 +42,15 @@ var TetraTx = 0;
 
 var curx=0, cury=0;
 
-////////////////////////尝试纹理映射/////////////
-
-/* 三、 设置顶点坐标和纹理坐标*/
-function initVertexBuffer(gl) {
-
-    // 创建顶点坐标和纹理坐标
-    var verticesTexCoords = new Float32Array([
-        // 顶点坐标， 纹理坐标
-        -0.5,  0.5,  0.0, 1.0,
-        -0.5, -0.5,  0.0, 0.0,
-        0.5,  0.5,  1.0, 1.0,
-        0.5, -0.5,  1.0, 0.0
-    ]);
-
-    var n = 4;
-
-    // 创建缓冲区
-    var vertexTexCoordBuffer = gl.createBuffer();
-    if (!vertexTexCoordBuffer) {
-        console.log('创建缓冲区失败！');
-        return -1;
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW);
-
-    var FSIZE = verticesTexCoords.BYTES_PER_ELEMENT;
-
-    var a_Position = gl.getAttribLocation(gl.program, 'a_Position');
-    if (a_Position < 0) {
-        console.log('获取 attribute 变量 a_Position 失败！');
-        return -1;
-    }
-
-    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0);
-    gl.enableVertexAttribArray(a_Position);
-
-    var a_TexCoord = gl.getAttribLocation(gl.program, 'a_TexCoord');
-    if (a_TexCoord < 0) {
-        console.log('获取 attribute 变量 a_TexCoord 失败！');
-        return -1;
-    }
-
-    gl.vertexAttribPointer(a_TexCoord, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2);
-    gl.enableVertexAttribArray(a_TexCoord);
-
-    return n;
-
-}
-
-/* 四、创建纹理对象并调用纹理绘制方法 */
-function initTextures(gl, n) {
-
-    // 创建纹理对象
-    var texture = gl.createTexture();
-    if (!texture) {
-        console.log('创建纹理对象失败！');
-        return false;
-    }
-
-    // 获取 u_Sampler 的存储位置
-    var u_Sampler = gl.getUniformLocation(gl.program, 'u_Sampler');
-    if (!u_Sampler) {
-        console.log('获取 uniform 变量 u_Sampler 失败！');
-        return false;
-    }
-
-    // 创建 Image 对象
-    var image = new Image();
-    image.onload = function (ev) {
-        loadTexture(gl, n, texture, u_Sampler, image);
-    };
-
-    image.src = '云朵.png';
-
-    return true;
-
-}
-
-/* 五、设置纹理相关信息 */
-function loadTexture(gl, n, texture, u_Sampler, image) {
-
-    // 对纹理图形进行y轴反转
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-
-    // 开启0号纹理单元
-    gl.activeTexture(gl.TEXTURE0);
-
-    // 向target绑定纹理对象
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    // 配置纹理参数
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
-    // 配置纹理对象
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
-
-    // 将0号纹理单元传递给取样器变量
-    gl.uniform1i(u_Sampler, 0);
-
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, n);
-
-}
-
-////////////////////////////////////////
-
+//创建一个视点(view) 射影(projection) 矩阵(matrix)
+var viewProjMatrix = new Matrix4();
+var viewIndex = 0; // 视图编号
+viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+viewProjMatrix.lookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
 //主函数，页面加载完成触发
 function main() {
+
 //获取canvas对象
 var canvas = document.getElementById("canvas");
 
@@ -157,16 +63,22 @@ if (!gl) {
 
 //初始化着色器
 if(!initShaders(gl,VSHADER_SOURCE,FSHADER_SOURCE)){
+
     console.log("无法初始化着色器");
     return;
 }
 
 //通过创建缓冲区并赋值数据给attribute变量 并返回绘制次数
 var n = initVertexBuffers(gl);
+
 if(n < 0){
     console.log("无法设置缓冲区的相关信息");
     return;
 }
+
+//测试Buffer////////////
+
+///////////////////////////
 
 //初始化底色和开启隐藏面消除
 gl.clearColor(0.0,0.0,0.0,0.0);
@@ -180,45 +92,74 @@ if(!u_NormalMatrix || !u_MvpMatrix){
     return;
 }
 
-//创建一个视点(view) 射影(projection) 矩阵(matrix)
-var viewProjMatrix = new Matrix4();
-viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
-viewProjMatrix.lookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
 //添加键盘按键交互事件
+//添加键盘按键交互事件
+
 document.onkeydown = function (e) {
-    keydown(e, gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+    var n = initVertexBuffers(gl);
+        if(n < 0){
+            console.log("无法设置缓冲区的相关信息");
+            return;
+        }
+        keydown(e, gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+        var n2 = initVertexBuffers2(gl);
+        if(n < 0){
+            console.log("无法设置缓冲区的相关信息");
+            return;
+        }
+
+        keydown2(e, gl, n2, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 };
 
 document.getElementById("Left").onclick = function() {
     CubeTx -= 1;
-    draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+    drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
 };
 document.getElementById("Right").onclick = function() {
     CubeTx += 1;
-    draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
-};
+    drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
 
+};
+/////////////////////////////////////////////////////////////////////////
+//调整相机位置
+document.getElementById("adjustView").onclick = function() {
+
+    if (viewIndex === 0) {
+        viewIndex = 1;
+        // 调整视点(view) 射影(projection) 矩阵(matrix)
+        viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+        viewProjMatrix.lookAt(20.0, 10.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
+    } else if (viewIndex === 1) {
+        viewIndex = 0;
+        // 调整视点(view) 射影(projection) 矩阵(matrix)
+        viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+        viewProjMatrix.lookAt(20.0, 20.0, 10.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
+    }
+};
 canvas.addEventListener("mousedown", function(event){
     curx += 2*event.clientX/canvas.width-1;
     trackingMouse = true;
-    draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+    drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
 });
 
 
-  canvas.addEventListener("mousemove", function(event){
+canvas.addEventListener("mousemove", function(event){
       if(trackingMouse){
         curx += 2*event.clientX/canvas.width-1;
-        draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+        drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
       }
   });
-  canvas.addEventListener("mouseup", function(event){
+canvas.addEventListener("mouseup", function(event){
     trackingMouse = false;
 });
 
 
 
-//绘制两节胳膊
-draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
 }
 
 //声明全局变量
@@ -227,75 +168,146 @@ var g_arm1Angle = -90.0;//arm1的旋转角度（度）
 var g_joint1Angle = 0.0;//joint1的旋转角度（度）
 
 function keydown(event, gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
-switch (event.keyCode){
-    case 38: // 上键 -> 以joint1为中心沿着z轴旋转（增量）
-        if (g_joint1Angle < 135.0) g_joint1Angle += angle_step;
-        break;
-    case 40: // 下键 -> 以joint1为中心沿着z轴旋转（减量）
-        if (g_joint1Angle > -135.0) g_joint1Angle -= angle_step;
-        break;
-    case 39: // 右键 -> 以y轴进行水平旋转（增量）
-        g_arm1Angle = (g_arm1Angle + angle_step) % 360;
-        break;
-    case 37: // 左键 -> 以y轴进行水平旋转（减量）
-        g_arm1Angle = (g_arm1Angle - angle_step) % 360;
-        break;
-    default:
-        return; // 其他按键没作用
-}
+        switch (event.keyCode){
+            case 38: // 上键 -> 以joint1为中心沿着z轴旋转（增量）
+                if (g_joint1Angle < 135.0) g_joint1Angle += angle_step;
+                break;
+            case 40: // 下键 -> 以joint1为中心沿着z轴旋转（减量）
+                if (g_joint1Angle > -135.0) g_joint1Angle -= angle_step;
+                break;
+            case 39: // 右键 -> 以y轴进行水平旋转（增量）
+                g_arm1Angle = (g_arm1Angle + angle_step) % 360;
+                break;
+            case 37: // 左键 -> 以y轴进行水平旋转（减量）
+                g_arm1Angle = (g_arm1Angle - angle_step) % 360;
+                break;
+            default:
+                return; // 其他按键没作用
+        }
 
-draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
-}
+        draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+    }
+function keydown2(event, gl, n2, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
+        switch (event.keyCode){
+            case 38: // 上键 -> 以joint1为中心沿着z轴旋转（增量）
+                if (g_joint1Angle < 135.0) g_joint1Angle += angle_step;
+                break;
+            case 40: // 下键 -> 以joint1为中心沿着z轴旋转（减量）
+                if (g_joint1Angle > -135.0) g_joint1Angle -= angle_step;
+                break;
+            case 39: // 右键 -> 以y轴进行水平旋转（增量）
+                g_arm1Angle = (g_arm1Angle + angle_step) % 360;
+                break;
+            case 37: // 左键 -> 以y轴进行水平旋转（减量）
+                g_arm1Angle = (g_arm1Angle - angle_step) % 360;
+                break;
+            default:
+                return; // 其他按键没作用
+        }
+
+        draw2(gl, n2, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+    }
 
 function initVertexBuffers(gl) {
-// Vertex coordinates（长方体3宽度，高度10，长度3，其原点在其底部）
-var vertices = new Float32Array([
-    1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5, 0.0, 1.5, 1.5, 0.0, 1.5, // v0-v1-v2-v3 front
-    1.5, 10.0, 1.5, 1.5, 0.0, 1.5, 1.5, 0.0, -1.5, 1.5, 10.0, -1.5, // v0-v3-v4-v5 right
-    1.5, 10.0, 1.5, 1.5, 10.0, -1.5, -1.5, 10.0, -1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
-    -1.5, 10.0, 1.5, -1.5, 10.0, -1.5, -1.5, 0.0, -1.5, -1.5, 0.0, 1.5, // v1-v6-v7-v2 left
-    -1.5, 0.0, -1.5, 1.5, 0.0, -1.5, 1.5, 0.0, 1.5, -1.5, 0.0, 1.5, // v7-v4-v3-v2 down
-    1.5, 0.0, -1.5, -1.5, 0.0, -1.5, -1.5, 10.0, -1.5, 1.5, 10.0, -1.5  // v4-v7-v6-v5 back
-]);
+        // Vertex coordinates（长方体3宽度，高度10，长度3，其原点在其底部）
+        var vertices = new Float32Array([
+            1.5, 10.0, 1.5, -1.5, 10.0, 1.5, -1.5, 0.0, 1.5, 1.5, 0.0, 1.5, // v0-v1-v2-v3 front
+            1.5, 10.0, 1.5, 1.5, 0.0, 1.5, 1.5, 0.0, -1.5, 1.5, 10.0, -1.5, // v0-v3-v4-v5 right
+            1.5, 10.0, 1.5, 1.5, 10.0, -1.5, -1.5, 10.0, -1.5, -1.5, 10.0, 1.5, // v0-v5-v6-v1 up
+            -1.5, 10.0, 1.5, -1.5, 10.0, -1.5, -1.5, 0.0, -1.5, -1.5, 0.0, 1.5, // v1-v6-v7-v2 left
+            -1.5, 0.0, -1.5, 1.5, 0.0, -1.5, 1.5, 0.0, 1.5, -1.5, 0.0, 1.5, // v7-v4-v3-v2 down
+            1.5, 0.0, -1.5, -1.5, 0.0, -1.5, -1.5, 10.0, -1.5, 1.5, 10.0, -1.5  // v4-v7-v6-v5 back
+        ]);
 
-// Normal
-var normals = new Float32Array([
-    0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // v0-v1-v2-v3 front
-    1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // v0-v3-v4-v5 right
-    0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // v0-v5-v6-v1 up
-    -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // v1-v6-v7-v2 left
-    0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, // v7-v4-v3-v2 down
-    0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0  // v4-v7-v6-v5 back
-]);
+        // Normal
+        var normals = new Float32Array([
+            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // v0-v1-v2-v3 front
+            1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // v0-v3-v4-v5 right
+            0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // v0-v5-v6-v1 up
+            -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // v1-v6-v7-v2 left
+            0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, // v7-v4-v3-v2 down
+            0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0  // v4-v7-v6-v5 back
+        ]);
 
-// Indices of the vertices
-var indices = new Uint8Array([
-    0, 1, 2, 0, 2, 3,    // front
-    4, 5, 6, 4, 6, 7,    // right
-    8, 9, 10, 8, 10, 11,    // up
-    12, 13, 14, 12, 14, 15,    // left
-    16, 17, 18, 16, 18, 19,    // down
-    20, 21, 22, 20, 22, 23     // back
-]);
+        // Indices of the vertices
+        var indices = new Uint8Array([
+            0, 1, 2, 0, 2, 3,    // front
+            4, 5, 6, 4, 6, 7,    // right
+            8, 9, 10, 8, 10, 11,    // up
+            12, 13, 14, 12, 14, 15,    // left
+            16, 17, 18, 16, 18, 19,    // down
+            20, 21, 22, 20, 22, 23     // back
+        ]);
 
-//创建缓冲区并赋值attribute
-if(!initArrayBuffer(gl, "a_Position", vertices, gl.FLOAT, 3)) return -1;
-if(!initArrayBuffer(gl, "a_Normal", normals, gl.FLOAT, 3)) return -1;
+        //创建缓冲区并赋值attribute
+        if(!initArrayBuffer(gl, "a_Position", vertices, gl.FLOAT, 3)) return -1;
+        if(!initArrayBuffer(gl, "a_Normal", normals, gl.FLOAT, 3)) return -1;
 
-//取消缓冲区buffer绑定
-gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        //取消缓冲区buffer绑定
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-//创建一个缓冲区对象，并将索引绑定到缓冲区
-var indexBuffer = gl.createBuffer();
-if(!indexBuffer){
-    console.log("无法创建索引缓冲区");
-    return -1;
-}
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+        //创建一个缓冲区对象，并将索引绑定到缓冲区
+        var indexBuffer = gl.createBuffer();
+        if(!indexBuffer){
+            console.log("无法创建索引缓冲区");
+            return -1;
+        }
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-return indices.length;
-}
+        return indices.length;
+    }
+function initVertexBuffers2(gl) {
+        // Vertex coordinates（长方体3宽度，高度10，长度3，其原点在其底部）
+        var vertices = new Float32Array([
+            0, 10.0, 0, 0, 10.0, 0, -1.5, 0.0, 1.5, 1.5, 0.0, 1.5, // v0-v1-v2-v3 front
+            0, 10.0, 0, 1.5, 0.0, 1.5, 1.5, 0.0, -1.5, 0, 10.0, 0, // v0-v3-v4-v5 right
+            0, 10.0, 0, 0, 10.0, 0,0, 10.0, 0, 0, 10.0, 0, // v0-v5-v6-v1 up
+            0, 10.0, 0, 0, 10.0, 0, -1.5, 0.0, -1.5, -1.5, 0.0, 1.5, // v1-v6-v7-v2 left
+            -1.5, 0.0, -1.5, 1.5, 0.0, -1.5, 1.5, 0.0, 1.5, -1.5, 0.0, 1.5, // v7-v4-v3-v2 down
+            1.5, 0.0, -1.5, -1.5, 0.0, -1.5, 0, 10.0, 0, 0, 10.0, 0 // v4-v7-v6-v5 back
+        ]);
+
+        // Normal
+        var normals = new Float32Array([
+            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // v0-v1-v2-v3 front
+            1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // v0-v3-v4-v5 right
+            0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // v0-v5-v6-v1 up
+            -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // v1-v6-v7-v2 left
+            0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, // v7-v4-v3-v2 down
+            0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0  // v4-v7-v6-v5 back
+        ]);
+
+        // Indices of the vertices
+        var indices = new Uint8Array([
+            0, 1, 2, 0, 2, 3,    // front
+            4, 5, 6, 4, 6, 7,    // right
+            8, 9, 10, 8, 10, 11,    // up
+            12, 13, 14, 12, 14, 15,    // left
+            16, 17, 18, 16, 18, 19,    // down
+            20, 21, 22, 20, 22, 23     // back
+        ]);
+
+        //创建缓冲区并赋值attribute
+        if(!initArrayBuffer(gl, "a_Position", vertices, gl.FLOAT, 3)) return -1;
+        if(!initArrayBuffer(gl, "a_Normal", normals, gl.FLOAT, 3)) return -1;
+
+        //取消缓冲区buffer绑定
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        //创建一个缓冲区对象，并将索引绑定到缓冲区
+        var indexBuffer = gl.createBuffer();
+        if(!indexBuffer){
+            console.log("无法创建索引缓冲区");
+            return -1;
+        }
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+
+        return indices.length;
+    }
+
 
 function initArrayBuffer(gl, attribute, data, type, num) {
 //创建缓冲区
@@ -326,24 +338,37 @@ return true;
 //声明两个全局的变换矩阵(模型变换矩阵和模型视图射影矩阵)
 var g_modelMatrix = new Matrix4(), g_mvpMatrix = new Matrix4();
 
-//绘制图形
+    //绘制图形
 function draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
-//绘制底色
-gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-//第一节胳膊
-var arm1Length = 10.0; //第一节胳膊的长度
-g_modelMatrix.setTranslate(curx,-12.0, CubeTx);
-g_modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
-drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+        //绘制底色
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-//第二节胳膊
-g_modelMatrix.translate(CubeTx/300.0, arm1Length, curx/300.0); //将图形移动到joint1的位置
-g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
-//g_modelMatrix.scale(1.3, 1.0, 1.3); //缩放
-drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+        //第一节胳膊
+        var arm1Length = 10.0; //第一节胳膊的长度
+        g_modelMatrix.setTranslate(curx,-12.0, CubeTx);
+        g_modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);
+        drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 
-}
+        // //第二节胳膊
+        // g_modelMatrix.translate(CubeTx, arm1Length, 0.0); //将图形移动到joint1的位置
+        // g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
+        // g_modelMatrix.scale(1.3, 1.0, 1.3); //缩放
+        // drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+    }
+function draw2(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
+        //绘制底色
+        //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        //第二节胳膊
+        g_modelMatrix.translate(CubeTx/300, 10, curx/300); //将图形移动到joint1的位置
+        g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0); //围绕z轴旋转
+        g_modelMatrix.scale(1.3, 1.0, 1.3); //缩放
+        drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+
+    }
+
 
 var g_normalMatrix = new Matrix4(); //法线坐标变换矩阵
 
@@ -374,4 +399,26 @@ function startMotion( x,  y)
 function stopMotion( x,  y)
 {
     trackingMouse = false;
+}
+
+function drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix){
+            //绘制两节胳膊
+    // var n = initVertexBuffers2(gl);
+    //     if(n < 0){
+    //         console.log("无法设置缓冲区的相关信息");
+    //         return;
+    //     }
+
+    var n = initVertexBuffers(gl);
+        if(n < 0){
+            console.log("无法设置缓冲区的相关信息");
+            return;
+        }
+        draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+        var n2 = initVertexBuffers2(gl);
+        if(n2 < 0){
+            console.log("无法设置缓冲区的相关信息");
+            return;
+        }
+        draw2(gl, n2, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 }

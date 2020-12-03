@@ -1,3 +1,6 @@
+// 顶点着色器
+var 	trackingMouse = false;
+
 
 var gl;
 var canvas;
@@ -11,6 +14,178 @@ var cdata,vdata;
 var numberofpoints=[];
 var CurModelViewMatrixLoc;
 var count=0;
+
+
+//////////elements function////////////
+function octalball(radius,count){
+
+    let data=[];
+    let a=[radius,0,0];
+    let b=[0,radius,0];
+    let c=[0,0,radius];
+    data.push(...fenxing(a, b, c, count,radius));
+    return data;
+}
+function fenxing(a,b,c,count,radius){
+    if(count<=0){
+        return [a,b,c];
+    }
+    let d,e,f;
+    d=middlePoint(a,b,radius);
+    e=middlePoint(b,c,radius);
+    f=middlePoint(a,c,radius);
+    let data=[];
+    data.push(...fenxing(e,f,d,count-1,radius));
+    data.push(...fenxing(a,d,f,count-1,radius));
+    data.push(...fenxing(d,b,e,count-1,radius));
+    data.push(...fenxing(f,e,c,count-1,radius));
+    return data;
+}
+function middlePoint(a,b,radius){
+    let c,d=[],e=[];
+    for(let i=0;i<3;i++){
+        d.push(b[i]+a[i]);
+    }
+    c=Math.pow(d[0]*d[0]+d[1]*d[1]+d[2]*d[2],1/2);
+    for(let i=0;i<3;i++){
+        e.push(radius*d[i]/c);
+    }
+    return e;
+}
+
+function quarterball(radius,count){
+    let data=[];
+    let a=[radius,0,0];
+    let b=[0,radius,0];
+    let c=[0,0,radius];
+    let d=[-radius,0,0];
+    data.push(...fenxing(a, b, c, count,radius));
+    data.push(...fenxing(d, b, c, count,radius));
+    return data;
+}
+function halfball(radius,count){
+    let data=[];
+    //半球的几个顶点
+    let a=[radius,0,0];
+    let b=[0,radius,0];
+    let c=[0,0,radius];
+    let d=[-radius,0,0];
+    let f=[0,0,-radius];
+    data.push(...fenxing(b, a, c, count,radius));
+    data.push(...fenxing(d, b, c, count,radius));
+    data.push(...fenxing(a, b, f, count,radius));
+    data.push(...fenxing(b, d, f, count,radius));
+    return data;
+}
+function totalball(radius,count){
+    let data=[];
+    let a=[radius,0,0];
+    let b=[0,radius,0];
+    let c=[0,0,radius];
+    let d=[-radius,0,0];
+    let e=[0,-radius,0];
+    let f=[0,0,-radius];
+    data.push(...fenxing(b, a, c, count,radius));
+    data.push(...fenxing(d, b, c, count,radius));
+    data.push(...fenxing(a, b, f, count,radius));
+    data.push(...fenxing(b, d, f, count,radius));
+
+    data.push(...fenxing(a, e, c, count,radius));
+    data.push(...fenxing(e, d, c, count,radius));
+    data.push(...fenxing(e, a, f, count,radius));
+    data.push(...fenxing(d, e, f, count,radius));
+    // data.push(...fenxing(a, b, c, count,radius));
+    // data.push(...fenxing(b, d, c, count,radius));
+    // data.push(...fenxing(b, a, f, count,radius));
+    // data.push(...fenxing(d, b, f, count,radius));
+    //
+    // data.push(...fenxing(e, a, c, count,radius));
+    // data.push(...fenxing(d, e, c, count,radius));
+    // data.push(...fenxing(a, e, f, count,radius));
+    // data.push(...fenxing(e, d, f, count,radius));
+    return data;
+}
+
+function cylinder(radius,height,count){
+    let data=[];
+    for(let i=0;i<2*count;i++){
+        data.push(radius*Math.cos(i*Math.PI/count));
+        i%2===0?data.push(height/2):data.push(-height/2);
+        data.push(radius*Math.sin(i*Math.PI/count));
+    }
+    data.push(radius);
+    data.push(height/2);
+    data.push(0);
+
+    data.push(radius*Math.cos(Math.PI/count));
+    data.push(-height/2);
+    data.push(radius*Math.sin(Math.PI/count));
+    return data;
+}
+
+function cvpitems(r1,r2,h,n) {
+    let data=[];
+
+    for(let i=0;i<n;i++){
+        data.push(r1*Math.cos(i*Math.PI/(n/2)));
+        data.push(h/2);
+        data.push(r1*Math.sin(i*Math.PI/(n/2)));
+        data.push(r2*Math.cos(i*Math.PI/(n/2)));
+        data.push(-h/2);
+        data.push(r2*Math.sin(i*Math.PI/(n/2)));
+    }
+    data.push(r1);
+    data.push(h/2);
+    data.push(0);
+
+    data.push(r2);
+    data.push(-h/2);
+    data.push(0);
+    return data;
+}
+
+function mytranslate(vect,distance){
+    let a=Math.pow(vect[0]*vect[0]+vect[1]*vect[1]+vect[2]*vect[2],1/2);
+    return a===0?translate(0,0,0):translate(vect[0] * distance / a, vect[1] * distance / a, vect[2] * distance / a);
+}
+
+function dynamicrotate(degree,selfaxisdata,rollingaixs,degreeplus) {
+    let list=[];
+    list.push(degree+degreeplus);
+    list.push(selfaxiscal(selfaxisdata,rollingaixs,degreeplus));
+    return list;
+}
+
+function selfaxiscal(selfaxisdata,rollingaixs,degree) {
+    let xdata=selfaxisdata[0];
+    let xabs=Math.pow((xdata[0]*xdata[0]+xdata[1]*xdata[1]+xdata[2]*xdata[2]),1/2);
+    let ydata=selfaxisdata[1];
+    let yabs=Math.pow((ydata[0]*ydata[0]+ydata[1]*ydata[1]+ydata[2]*ydata[2]),1/2);
+    let zdata=selfaxisdata[2];
+    let zabs=Math.pow((zdata[0]*zdata[0]+zdata[1]*zdata[1]+zdata[2]*zdata[2]),1/2);
+    if(rollingaixs===0){
+        ydata[1]=(ydata[2]*Math.cos(radians(degree))+ydata[1]*Math.sin(radians(degree)))/yabs;
+        ydata[2]=(ydata[1]*Math.cos(radians(degree))-ydata[2]*Math.sin(radians(degree)))/yabs;
+        zdata[1]=(zdata[2]*Math.cos(radians(degree))+zdata[1]*Math.sin(radians(degree)))/zabs;
+        zdata[2]=(zdata[1]*Math.cos(radians(degree))-zdata[2]*Math.sin(radians(degree)))/zabs;
+    }
+    if(rollingaixs===1){
+        xdata[0]=(xdata[0]*Math.cos(radians(degree))-xdata[2]*Math.sin(radians(degree)))/xabs;
+        xdata[2]=(xdata[2]*Math.cos(radians(degree))+xdata[0]*Math.sin(radians(degree)))/xabs;
+        zdata[0]=(zdata[0]*Math.cos(radians(degree))-zdata[2]*Math.sin(radians(degree)))/zabs;
+        zdata[2]=(zdata[2]*Math.cos(radians(degree))+zdata[0]*Math.sin(radians(degree)))/zabs;
+    }
+    if(rollingaixs===2){
+        xdata[0]=(xdata[0]*Math.cos(radians(degree))-xdata[1]*Math.sin(radians(degree)))/xabs;
+        xdata[1]=(xdata[1]*Math.cos(radians(degree))+xdata[0]*Math.sin(radians(degree)))/xabs;
+        ydata[0]=(ydata[0]*Math.cos(radians(degree))-ydata[1]*Math.sin(radians(degree)))/yabs;
+        ydata[1]=(ydata[1]*Math.cos(radians(degree))+ydata[0]*Math.sin(radians(degree)))/yabs;
+    }
+    return [xdata,ydata,zdata];
+}
+///////////////////////////////////////////////
+
+
 
 var UFOselfaxis=[
     vec3(1,0,0),
@@ -27,7 +202,8 @@ var planetselfaxis=[
 var planetmovedistance=vec3(0,0,0);
 var planetrolleddegree=vec3(0,0,0);
 
-
+//球坐标系
+//
 var near = 0.3;
 var far = 5.0;
 var radius = 2.5;
@@ -127,9 +303,9 @@ window.onload=function init() {
     lightPositionaddr=gl.getUniformLocation(program, "lightPosition")
     shininessaddr=gl.getUniformLocation(program, "shininess")
 
-
+//一个半球玻璃
     {
-        //一个半球玻璃
+        
         count = 5;
         vdata = halfball(0.2, count);
         let n = 12 * Math.pow(4, count);
@@ -148,7 +324,7 @@ window.onload=function init() {
             testNomal.push(nomalTemp)
             testNomal.push(nomalTemp)
         }
-        console.log("1")
+        console.log("计算完法向量了")
 
         //缓冲区操作
         glassNBufferID = gl.createBuffer();
@@ -160,8 +336,9 @@ window.onload=function init() {
         gl.bindBuffer(gl.ARRAY_BUFFER, glassvBufferID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(vdata), gl.STATIC_DRAW);
     }
+//星球主体
     {
-        //星球主体
+
         count = 6;
         vdata = totalball(0.3, count);
         let n = 24 * Math.pow(4, count);
@@ -182,9 +359,6 @@ window.onload=function init() {
             testNomal.push(nomalTemp)
         }
 
-
-
-        console.log("2")
         //缓冲区操作
         planetballNBufferID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, planetballNBufferID);
@@ -194,9 +368,11 @@ window.onload=function init() {
         planetballvBufferID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, planetballvBufferID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(vdata), gl.STATIC_DRAW);
+        console.log("画了星球主体")
     }
+//喷气口
     {
-        //喷气口
+
         count = 500;
         vdata = cylinder(0.1, 0.14, count);
         let n = 2 * count + 2;
@@ -215,7 +391,7 @@ window.onload=function init() {
             testNomal.push(nomalTemp)
             testNomal.push(nomalTemp)
         }
-        console.log("3")
+        console.log("画了喷气口")
 
         //缓冲区操作
         jetNBufferID = gl.createBuffer();
@@ -227,8 +403,8 @@ window.onload=function init() {
         gl.bindBuffer(gl.ARRAY_BUFFER, jetvBufferID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(vdata), gl.STATIC_DRAW);
     }
+//卫星环
     {
-        //卫星环
         count = 500;
         vdata =cvpitems(0.55,0.65,0,count);
         let n = 2 * count + 2;
@@ -245,7 +421,7 @@ window.onload=function init() {
             testNomal.push(nomalTemp)
             testNomal.push(nomalTemp)
         }
-        console.log("4")
+        console.log("画了卫星环")
 
         //缓冲区操作
         discNBufferID = gl.createBuffer();
@@ -257,8 +433,8 @@ window.onload=function init() {
         gl.bindBuffer(gl.ARRAY_BUFFER, discvBufferID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(vdata), gl.STATIC_DRAW);
     }
+ //UFO底板
     {
-        //UFO底板
         var count = 500;
         vdata =cvpitems(0.2,0.6,0.05,count);
         let n = 2 * count + 2;
@@ -266,7 +442,7 @@ window.onload=function init() {
         let testNomal=[]
         let len=vdata.length
 
-
+//我没懂
         for(let i=0;i<len;i++){
             let t1=[vdata[0]-vdata[3],vdata[1]-vdata[4],vdata[2]-vdata[5]]
             let t2=[vdata[0]-vdata[6],vdata[1]-vdata[7],vdata[2]-vdata[8]];
@@ -277,7 +453,7 @@ window.onload=function init() {
             testNomal.push(nomalTemp)
             testNomal.push(nomalTemp)
         }
-        console.log("5")
+        console.log("画了UFO底板")
         //缓冲区操作
         plateNBufferID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, plateNBufferID);
@@ -291,6 +467,39 @@ window.onload=function init() {
 
     gl.uniform1f(shininessaddr,materialShininess);
 
+       ///////////////track mouse move////////////////
+
+       canvas.addEventListener("mousedown", function(event){
+        //curx += 2*event.clientX/canvas.width-1;
+        trackingMouse = true;
+        //drawfinal(gl, viewProjMatrix, u_MvpMatrix, u_NormalMatrix)
+        //near += 2*event.clientX/canvas.width-1;
+        //theta+= event.clientX/canvas.width-1;
+        //phi不影响视点
+        //phi+=event.clientY/canvas.width-1;
+        eye=vec3(2*event.clientX/canvas.width-1,2*event.clientY/canvas.width-1, 5*event.clientY/canvas.width-1);
+        console.log("theta:",theta,"near:",near,"far:",far,"radius:",radius,"thata:",theta,"phi:",phi);
+        console.log("eye:",eye,radius*Math.sin(theta)*Math.sin(phi),radius*Math.cos(theta));
+        //变得太多了，需要print调参
+    });
+
+    canvas.addEventListener("mousemove", function(event){
+        if(trackingMouse){
+        //near += 2*event.clientX/canvas.width-1;
+        //theta+= event.clientX/canvas.width-1;
+        //改变eye则改变视点
+        //eye = vec3(radius*Math.sin(theta)*Math.cos(phi),radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
+        //phi+=event.clientY/canvas.width-1;
+        eye=vec3(2*event.clientX/canvas.width-1,2*event.clientY/canvas.width-1,5*event.clientY/canvas.width-1);
+        console.log("theta:",theta,"near:",near,"far:",far,"radius:",radius,"thata:",theta,"phi:",phi);
+        console.log("eye:",eye,radius*Math.sin(theta)*Math.sin(phi),radius*Math.cos(theta));
+        }
+    });
+    canvas.addEventListener("mouseup", function(event){
+    trackingMouse = false;
+    });
+
+    ///////////////////////////////////////////////
 
     document.getElementById("Button1").onclick = function()
     {
@@ -330,8 +539,14 @@ window.onload=function init() {
         isufo=true;
     };
 
+
+ 
+    //改变eye则改变视点，球坐标系计算到
+    eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
+        radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
     render();
 };
+
 
 
 function render() {
@@ -343,14 +558,16 @@ function render() {
     lightPosition[0]=-Math.cos(radians(0-UFOrolleddegree[1]));
     lightPosition[2]=-Math.sin(radians(0-UFOrolleddegree[1]));
 
+    //如果不ispause则移动飞碟和光照位置
     if(!ispause) {
         //动画
         lightPosition[0]=-1.0*Math.cos(radians(0-UFOrolleddegree[1]));
-        // lightPosition[1]=-1.0*Math.cos(radians(0-UFOrolleddegree[1]));
+        lightPosition[1]=-1.0*Math.cos(radians(0-UFOrolleddegree[1]));
         lightPosition[2]=-1.0*Math.sin(radians(0-UFOrolleddegree[1]));
 
 
         UFOmovedistance[0]=0.9*Math.cos(radians(0-UFOrolleddegree[1]));
+        UFOmovedistance[1]=0.9*Math.cos(radians(0-UFOrolleddegree[1]));
         UFOmovedistance[2]=0.9*Math.sin(radians(0-UFOrolleddegree[1]));
 
         UFOrolleddegree[1]++;
@@ -360,9 +577,7 @@ function render() {
             theta+=1*Math.PI/180.0;
         }
     }
-
-    eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
-        radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
+    
     modelViewMatrix = lookAt(eye, at , up);
     projectionMatrix = mult(perspective(fovy, aspect, near, far),modelViewMatrix);
 
