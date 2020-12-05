@@ -16,9 +16,6 @@ uniform float shininess;
 void main()
 {
     vec3 pos = -(modelViewMatrix * vPosition).xyz;
-
-
-
     vec3 light = lightPosition.xyz;
     vec3 L = normalize( light - pos );
 

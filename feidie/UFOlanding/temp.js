@@ -232,18 +232,6 @@ var glassNBufferID,glassvBufferID,
     discNBufferID,discvBufferID,
     lineNBufferID,linevBufferID;
 
-var rawcdata=[
-    vec4( 0.0, 0.0, 0.0, 1.0 ),  // black
-    vec4( 1.0, 0.0, 0.0, 1.0 ),  // red
-    vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow
-    vec4( 0.0, 1.0, 0.0, 1.0 ),  // green
-    vec4( 0.0, 0.0, 1.0, 1.0 ),  // blue
-    vec4( 1.0, 0.0, 1.0, 1.0 ),  // magenta
-    vec4( 1.0, 1.0, 1.0, 1.0 ),  // white
-    vec4( 0.0, 1.0, 1.0, 1.0 ),  // cyan
-];
-
-
 
 var lightPosition = vec4(0.0, 0.0, 0.0, 0.0 );
 
@@ -468,7 +456,7 @@ window.onload=function init() {
     gl.uniform1f(shininessaddr,materialShininess);
 
        ///////////////track mouse move////////////////
-
+/*
        canvas.addEventListener("mousedown", function(event){
         //curx += 2*event.clientX/canvas.width-1;
         trackingMouse = true;
@@ -498,7 +486,7 @@ window.onload=function init() {
     canvas.addEventListener("mouseup", function(event){
     trackingMouse = false;
     });
-
+*/
     ///////////////////////////////////////////////
 
     document.getElementById("Button1").onclick = function()
@@ -550,7 +538,10 @@ window.onload=function init() {
 
 
 function render() {
-
+    
+    eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
+    radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
+    
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     UFOmovedistance[0]=0.9*Math.cos(radians(0-UFOrolleddegree[1]));
     UFOmovedistance[2]=0.9*Math.sin(radians(0-UFOrolleddegree[1]));
@@ -564,8 +555,6 @@ function render() {
         lightPosition[0]=-1.0*Math.cos(radians(0-UFOrolleddegree[1]));
         lightPosition[1]=-1.0*Math.cos(radians(0-UFOrolleddegree[1]));
         lightPosition[2]=-1.0*Math.sin(radians(0-UFOrolleddegree[1]));
-
-
         UFOmovedistance[0]=0.9*Math.cos(radians(0-UFOrolleddegree[1]));
         UFOmovedistance[1]=0.9*Math.cos(radians(0-UFOrolleddegree[1]));
         UFOmovedistance[2]=0.9*Math.sin(radians(0-UFOrolleddegree[1]));
@@ -590,7 +579,7 @@ function render() {
     let transviewMat=mat4();
     // transviewMat=modelViewMatrix;
     {
-        //ufo材质
+        
         ambientProduct = mult(lightAmbient, vec4(1,1,0,1));
         diffuseProduct = mult(lightDiffuse, vec4(1,1,0,1));
         specularProduct = mult(lightSpecular, vec4(1,1,0,1));
@@ -725,9 +714,9 @@ function render() {
 
         //星球主体
 
-        ambientProduct = mult(lightAmbient, vec4(0.7,0.5,0.5,1));   //rgba(230, 126, 34,1.0)
-        diffuseProduct = mult(lightDiffuse, vec4(0.8,0.5,0.5,1));
-        specularProduct = mult(lightSpecular, vec4(0.8,0.5,0.5,1));
+        ambientProduct = mult(lightAmbient, vec4(1.0,1.0,214.0/255,1.0));//rgba(255,255,214,1.0)   
+        diffuseProduct = mult(lightDiffuse, vec4(218.0/255,112.0/255,214.0/255,1.0));//rgba(218,112,214,1.0)
+        specularProduct = mult(lightSpecular, vec4(28.0/255,112.0/255,214.0/255,1.0));//rgba(28,112,214,1.0)
         gl.uniform4fv(ambientaddr, flatten(ambientProduct));
         gl.uniform4fv(diffuseaddr, flatten(diffuseProduct) );
         gl.uniform4fv(specularaddr,flatten(specularProduct));
@@ -754,28 +743,54 @@ function render() {
         gl.drawArrays(gl.TRIANGLES, 0, numberofpoints[1]);
 
         //卫星环------------------------------------
-
-        ambientProduct = mult(lightAmbient, vec4(0.6,0.0,0.6,1));   //rgba(230, 126, 34,1.0)
-        diffuseProduct = mult(lightDiffuse, vec4(0.3,0.0,0.3,1));
-        specularProduct = mult(lightSpecular, vec4(0.3,0.0,0.3,1));
+        //var lightAmbient = vec4(0.3, 0.3, 0.3, 1.0 );     //全局的光
+        //gl.uniform4fv(ambientaddr, flatten(ambientProduct)); //传入光照信息
+        //ambientaddr=gl.getUniformLocation(program, "ambientProduct")  //获取变量地址
+        //var ambientProduct = mult(lightAmbient, materialAmbient); 
+        //后三位为颜色
+        //颜色设定
+        ambientProduct = mult(lightAmbient, vec4(230.0/255,126.0/255,34.0/255,1)); //rgba(230, 126, 34,1.0)
+        diffuseProduct = mult(lightDiffuse, vec4(230.0/255,126.0/255,34.0/255,1));//改变反射后的光,rgba(20, 126, 34,1.0)
+        specularProduct = mult(lightSpecular, vec4(0.0,1.0,1.0,1));//rgba(0, 255, 255,1.0) ?好像没找到，需要绑定ufo看看
         gl.uniform4fv(ambientaddr, flatten(ambientProduct));
         gl.uniform4fv(diffuseaddr, flatten(diffuseProduct) );
         gl.uniform4fv(specularaddr,flatten(specularProduct));
+        /*
+        //星球主体的此部分代码
         //绑定缓冲区
-        gl.bindBuffer(gl.ARRAY_BUFFER, discNBufferID);
+        gl.bindBuffer(gl.ARRAY_BUFFER, planetballNBufferID);
         //传值：法向量
         gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vNormal);
         //绑定缓冲区
-        gl.bindBuffer(gl.ARRAY_BUFFER, discvBufferID);
+        gl.bindBuffer(gl.ARRAY_BUFFER, planetballvBufferID);
         //传值：顶点
         gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vPosition);
         //变换矩阵计算
-        let disctransMat = transmat;
+        let platformballtransMat = transmat;
+        platformballtransMat=mult(transviewMat,platformballtransMat);
+        //传值：变换矩阵
+        gl.uniformMatrix4fv(CurModelViewMatrixLoc, false, flatten(platformballtransMat));
+        gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
+        //绘制
+        gl.drawArrays(gl.TRIANGLES, 0, numberofpoints[1]);
+        */ 
+        //绑定缓冲区
+        gl.bindBuffer(gl.ARRAY_BUFFER, discNBufferID);//discNBufferID为render卫星环部分
+        //传值：法向量
+        gl.vertexAttribPointer(vNormal, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vNormal);
+        //绑定缓冲区
+        gl.bindBuffer(gl.ARRAY_BUFFER, discvBufferID);//discvBufferID为render部分卫星环缓冲区操作
+        //传值：顶点
+        gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vPosition);
+        //变换矩阵计算
+        let disctransMat = transmat;//disctransMat为卫星环的变换矩阵,在这里定义
         disctransMat=mult(transviewMat,disctransMat);
         //传值：变换矩阵
-        gl.uniformMatrix4fv(CurModelViewMatrixLoc, false, flatten(disctransMat));
+        gl.uniformMatrix4fv(CurModelViewMatrixLoc, false, flatten(disctransMat));//disctransMat为卫星环变换矩阵
         gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
         //绘制
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, numberofpoints[3]);

@@ -367,6 +367,7 @@ window.onload = function init() {
         document.getElementById("CurrentSelected").innerHTML = "Current Selected : All";
     }
     document.getElementById("Split").onclick = function () {
+        //没看懂这里
         cubeTx = 0; cubeTy = 1.2; cubeTz = 0;
         ear1Tx = -0.3; ear1Ty = 1.4; ear1Tz = 0.2;
         ear2Tx = 0.4; ear2Ty = 1.3; ear2Tz = -0.3;
@@ -398,23 +399,7 @@ window.onload = function init() {
         scaleZ = event.target.value;
     }
 
-    canvas.addEventListener("mousedown", function (event) {
-        var x = 2 * event.clientX / canvas.width - 1;
-        var y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
-        startMotion(x, y);
-    });
 
-    canvas.addEventListener("mouseup", function (event) {
-        var x = 2 * event.clientX / canvas.width - 1;
-        var y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
-        stopMotion(x, y);
-    });
-
-    canvas.addEventListener("mousemove", function (event) {
-        var x = 2 * event.clientX / canvas.width - 1;
-        var y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
-        mouseMotion(x, y);
-    });
 
     render();
 };
@@ -614,7 +599,8 @@ function render() {
     initCube(0.1,0.25,0.1,arm1Tx,arm1Ty,arm1Tz,0,0,20);//arm1
     initCube(0.1,0.25,0.1,arm2Tx,arm2Ty,arm2Tz,0,0,-20);//arm2
     initCube(0.12,0.2,0.12,leg1Tx,leg1Ty,leg1Tz,0,0,0);//leg1
-    initCube(0.12,0.2,0.12,leg2Tx,leg2Ty,leg2Tz,0,0,0);//leg2
+    initCube(0.2,0.2,0.12,leg2Tx,leg2Ty,leg2Tz,0,0,0);//leg2
+    //前三个参数为长宽高
 
     M = translate(translateX, translateY, translateZ);
     modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
