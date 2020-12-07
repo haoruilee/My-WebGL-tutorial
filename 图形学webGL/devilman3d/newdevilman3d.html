@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>Devilman 3D</title>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec3 vPosition;
+        attribute vec4 a_Position;
+        attribute vec3 vColor;
+        attribute vec4 a_Normal;
+        uniform vec3 u_LightColor;
+        uniform vec3 u_LightPosition;
+        uniform vec3 u_LightColorAmbient;
+        varying vec4 color;
+
+
+
+        uniform mat4 rotateMatrix;
+        uniform mat4 translateMatrix;
+        uniform mat4 scaleMatrix;
+        uniform mat4 modelViewMatrix;
+
+
+
+        void main() {
+
+            gl_Position = rotateMatrix*modelViewMatrix*scaleMatrix*translateMatrix*vec4(vPosition,1.0);
+            vec3 normal = normalize(vec3(a_Normal));// 归一化法向量
+            vec3 dir = normalize(u_LightPosition - vec3(a_Position));// 计算入射光线
+            float cos = max(dot(dir, normal), 0.0);// 计算入射角余弦值
+                vec3 diffuse = u_LightColor * vec3(vColor) * cos;// 计算平行光漫反射颜色
+    vec3 ambient = u_LightColorAmbient * vec3(vColor.rgb);// 计算环境光反射颜色
+    color = vec4(diffuse + ambient, 1);// 叠加作为最终的颜色
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 color;
+        void main() {
+
+    gl_FragColor = color;
+        }
+    </script>
+
+    <script type="text/javascript" src="../Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="../Common/initShaders.js"></script>
+    <script type="text/javascript" src="../Common/MV.js"></script>
+    <script type="text/javascript" src="newdevilman3d.js"></script>
+</head>
+
+<body>
+    Press A to move left, D to move right, W to move up, S to move down, Q to move forward, E to move backward<br>
+    <p id="CurrentSelected"></p>
+    <button id="CubeSelected">Cube</button>
+    <button id="Ear1Selected">Left Ear</button>
+    <button id="Ear2Selected">Right Ear</button>
+    <button id="BodySelected">Body</button>
+    <button id="Arm1Selected">Left Arm</button>
+    <button id="Arm2Selected">Right Arm</button>
+    <button id="Leg1Selected">Left Leg</button>
+    <button id="Leg2Selected">Right Leg</button><br>
+    <button id="AllSelected">Select All</button>
+    <button id="Combine">Combine</button>
+    <button id="Split">Split</button>
+    <br><br>
+    <div>
+        General Scale<br>
+        ScaleX : 0 <input id="ScaleX" type="range" min="0" max="2" step="0.02" value="1" /> 2&nbsp;&nbsp;&nbsp;
+        ScaleY : 0 <input id="ScaleY" type="range" min="0" max="2" step="0.02" value="1" /> 2&nbsp;&nbsp;&nbsp;
+        ScaleZ : 0 <input id="ScaleZ" type="range" min="0" max="2" step="0.02" value="1" /> 2
+    </div><br>
+    <canvas id="gl-canvas" width="680" height="680">
+        Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+</body>
+
+</html>

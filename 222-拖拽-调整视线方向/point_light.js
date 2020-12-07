@@ -1,5 +1,4 @@
 //球坐标系
-//
 var near = 0.3;
 var far = 5.0;
 var radius = 2.5;
@@ -9,7 +8,9 @@ var phi    = 0.0;
 var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
 var  aspect;       // Viewport aspect ratio
 
-
+var curx =0.0;
+//跟踪鼠标
+var 	trackingMouse = false;
 
 var VSHADER_SOURCE =
     'attribute vec4 a_Position;\n' +
@@ -44,7 +45,10 @@ var FSHADER_SOURCE =
 var ANGLE_STEP = 3.0;
 var g_arm1Angle = 90.0;
 var g_joint1Angle = 0.0;
- 
+//是否可以自由探索
+var freetry= 0;
+var looky =0.0;
+var lookx=0.0;
 var g_modelMatrix = new Matrix4();
 var g_mvpMatrix = new Matrix4();
  
@@ -60,8 +64,10 @@ function main()
     //开启深度检测
     gl.enable(gl.DEPTH_TEST);
     gl.clearColor(1.0,1.0,1.0,1.0);
- 
- 
+    //初始化相机矩阵
+    CurModelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
+    projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    
     //对光源数据进行赋值
     var u_PointLightPosition = gl.getUniformLocation(gl.program,'u_PointLightPosition');
     //修改下面这个值就会改变光照点
@@ -82,15 +88,65 @@ function main()
     var u_MvpMatrix = gl.getUniformLocation(gl.program,'u_MvpMatrix');
     var viewProjMatrix = new Matrix4();
     viewProjMatrix.setPerspective(50,canvas.width/canvas.height,1,100);
-    viewProjMatrix.lookAt(0,0,90.0,0.0,0.0,0.0,0.0,1.0,0.0);
- 
+    viewProjMatrix.lookAt(0,0,40.0,0.0,0.0,0.0,0.0,1.0,0.0);
+    console.log("初始化：",viewProjMatrix);//看是否触发移动
 
 
     document.onkeydown = function(ev){
         keyDown(ev,gl,n,viewProjMatrix,u_MvpMatrix,u_NormalMatrix);
     };
-    draw(gl,n,viewProjMatrix,u_MvpMatrix,u_NormalMatrix);
- 
+
+    document.getElementById("free").onclick = function() {
+        if(freetry === 0){
+            freetry = 1;
+            console.log("freetry:",freetry);//看是否触发移动
+        } else if (freetry === 1) {
+            freetry = 0;
+            console.log("freetry:",freetry);//看是否触发移动
+        }
+    };
+
+    //第一个值大于40就看不见了，第二个值30，第四个值掌管远近
+    canvas.addEventListener("mousedown", function(event){
+        if(freetry === 1){
+        lookx += 10*((event.clientX/canvas.width)-1);
+        looky += 10*((event.clientY/canvas.height)-1);
+        console.log("lookx:",looky);//看是否触发移动\
+        //console.log("event.clientX:",event.clientX);//663~1859
+        //console.log("canvas.width:",canvas.width);//1200
+        console.log("event.clientY:",event.clientY);//20~696
+        console.log("canvas.height:",canvas.height);//800
+        trackingMouse = true;
+        //模型视图矩阵
+        //调整它则改变视点位置
+        viewProjMatrix.setPerspective(50.0,canvas.width/canvas.height, 1.0, 100.0);
+        viewProjMatrix.lookAt(0, looky, 40.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        console.log(viewProjMatrix);//看是否触发移动
+        draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);}
+    });
+    
+    
+    canvas.addEventListener("mousemove", function(event){
+        if(freetry === 1){
+        if(trackingMouse){
+            lookx += 10*((event.clientX/canvas.width)-1);
+            looky += 10*((event.clientY/canvas.height)-1);
+            console.log("lookx:",looky);//看是否触发移动\
+            console.log("event.clientX:",event.clientY);//663~1859
+            console.log("canvas.width:",canvas.height);//1200
+            //调整它则改变视点位置
+            var u_MvpMatrix = gl.getUniformLocation(gl.program,'u_MvpMatrix');
+            var viewProjMatrix = new Matrix4();
+            viewProjMatrix.setPerspective(50,canvas.width/canvas.height,1,100);
+            viewProjMatrix.lookAt(0,looky,40.0,0.0,0.0,0.0,0.0,1.0,0.0);
+            console.log(viewProjMatrix);//看是否触发移动
+            draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
+          }}
+    });
+    canvas.addEventListener("mouseup", function(event){
+        trackingMouse = false;
+    });
+    draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
 }
 function initVertexBuffers(gl)
 {
@@ -141,6 +197,7 @@ function initArrayBuffer(gl,data,num,type,attribute){
 }
  
 var g_joint2Angle = 0,g_joint3Angle = 0;
+
 function keyDown(ev,gl,n,viewProjMatrix,u_MvpMatrix,u_NormalMatrix)
 {
     console.log(ev.keyCode);//7查看按键绑定的值
@@ -174,40 +231,42 @@ function keyDown(ev,gl,n,viewProjMatrix,u_MvpMatrix,u_NormalMatrix)
     draw(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
  
 }
+
+
 function draw(gl,n,viewProjMatrix,u_MvpMatrix,u_NormalMatrix)
 {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     //base
     var baseHeight = 2.0;
-    g_modelMatrix.setTranslate(0.0, -12.0, 0.0);
+    g_modelMatrix.setTranslate(curx, -12.0, 0.0);
     drawBox(gl, n, 10.0,baseHeight,10.0,viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
     // Arm1
     var arm1Length = 10.0; // Length of arm1
-    g_modelMatrix.translate(0.0,baseHeight,0.0);
+    g_modelMatrix.translate(curx,baseHeight,0.0);
     g_modelMatrix.rotate(g_arm1Angle, 0.0, 1.0, 0.0);    // Rotate around the y-axis
     drawBox(gl, n, 3.0,arm1Length,3.0,viewProjMatrix, u_MvpMatrix, u_NormalMatrix); // Draw
  
     //arm2
     var arm2Length = 8;
-    g_modelMatrix.translate(0.0,arm1Length,0.0);
+    g_modelMatrix.translate(curx,arm1Length,0.0);
     g_modelMatrix.rotate(g_joint1Angle, 0.0, 0.0, 1.0);
     drawBox(gl, n, 4,arm2Length,4,viewProjMatrix, u_MvpMatrix, u_NormalMatrix); // Draw
  
     // palm
     var palmLength = 2.0;
-    g_modelMatrix.translate(0.0, arm2Length, 0.0); 　　　// Move to joint1
+    g_modelMatrix.translate(curx, arm2Length, 0.0); 　　　// Move to joint1
     g_modelMatrix.rotate(g_joint2Angle, 0.0, 1.0, 0.0);  // Rotate around the z-axis
     drawBox(gl, n,3,palmLength,6,viewProjMatrix, u_MvpMatrix, u_NormalMatrix); // Draw
  
     //finger1
     pushMatrix(g_modelMatrix);
-    g_modelMatrix.translate(0.0, palmLength, 2);
+    g_modelMatrix.translate(curx, palmLength, 2);
     g_modelMatrix.rotate(g_joint3Angle, 1.0, 0.0, 0.0);
     drawBox(gl, n,1,2,1,viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
  
     //finger2
     g_modelMatrix = popMatrix();
-    g_modelMatrix.translate(0.0,palmLength, -2);
+    g_modelMatrix.translate(curx,palmLength, -2);
     g_modelMatrix.rotate(-g_joint3Angle, 1.0, 0.0, 0.0);
     drawBox(gl, n,1,2,1,viewProjMatrix, u_MvpMatrix, u_NormalMatrix);
  

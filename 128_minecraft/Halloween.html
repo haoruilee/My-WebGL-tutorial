@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>hmbb_mouse</title>
+  </head>
+
+  <script id="vertex-shader" type="x-shader/x-vertex">
+
+    attribute  vec4 vPosition;
+    attribute  vec3 vNormal;
+
+    attribute  vec4 vColor;
+
+    varying vec4 fColor;
+
+    uniform mat4 viewMatrix;
+    uniform mat4 modelViewMatrix;
+    uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+    uniform mat4 projectionMatrix;
+    uniform vec4 lightPosition;
+    uniform float shininess;
+    uniform float shininess2;
+    void main()
+    {
+        //fColor = vColor;
+        //gl_Position = viewMatrix * modelViewMatrix * vPosition;
+        //gl_Position.z = -gl_Position.z;
+    	    vec3 pos = -(modelViewMatrix * vPosition).xyz;
+
+        //fixed light postion
+
+        vec3 light = lightPosition.xyz;
+        vec3 L = normalize( light - pos );
+
+
+        vec3 E = normalize( -pos );
+        vec3 H = normalize( L + E );
+
+        vec4 NN = vec4(vNormal,0);
+
+        // Transform vertex normal into eye coordinates
+
+        vec3 N = normalize( (modelViewMatrix*NN).xyz);
+
+        // Compute terms in the illumination equation
+        vec4 ambient = ambientProduct;
+
+        float Kd = max( dot(L, N), 0.0 );
+        vec4  diffuse = Kd*diffuseProduct;
+
+        float Ks = pow( max(dot(N, H), 0.0), shininess );
+        vec4  specular = Ks * specularProduct;
+
+
+        if( dot(L, N) < 0.0 ) {
+        specular = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+
+        gl_Position = projectionMatrix*viewMatrix * modelViewMatrix * vPosition;
+        fColor = (ambient + diffuse +specular)*vColor;
+
+
+        fColor.a = 1.0;
+    }
+  </script>
+
+  <script id="fragment-shader" type="x-shader/x-fragment">
+
+    precision mediump float;
+
+    varying vec4 fColor;
+
+    void
+    main()
+    {
+        gl_FragColor = fColor;
+    }
+  </script>
+
+  <script type="text/javascript" src="Common/webgl-utils.js"></script>
+  <script type="text/javascript" src="Common/initShaders.js"></script>
+  <script type="text/javascript" src="Common/MV.js"></script>
+  <script type="text/javascript" src="Halloween.js"></script>
+
+  <body>
+    <canvas id="gl-canvas" width="650" height="650">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+
+    <br />
+
+    <button id="adjustView">调整视图</button>
+    <p>
+      苦力怕：
+      <button id="cubeForward">前进</button>
+      <button id="cubeBack">后退</button>
+      <button id="cubeR1">逆时针旋转</button>
+      <button id="cubeR2">顺时针旋转</button>
+      <button id="cubeRx1">逆时针俯仰</button>
+      <button id="cubeRx2">顺时针俯仰</button>
+      <button id="cubeRz1">逆时针翻滚</button>
+      <button id="cubeRz2">顺时针翻滚</button>
+      <button id="small">缩小</button>
+      <button id="big">放大</button>
+      <button id="left0">向左</button>
+      <button id="right0">向右</button>
+      <button id="up0">向上</button>
+      <button id="down0">向下</button>
+      <button id="rotate_X0">绕世界X轴旋转</button>
+      <button id="rotate_Y0">绕世界Y轴旋转</button>
+      <button id="rotate_Z0">绕世界Z轴旋转</button>
+      <button id="changelight1">改变光源位置</button>
+    </p>
+
+    <p>
+      村民：
+      <button id="cubeForward2">前进</button>
+      <button id="cubeBack2">后退</button>
+      <button id="cubeR12">逆时针旋转</button>
+      <button id="cubeR22">顺时针旋转</button>
+      <button id="cubeRx12">逆时针俯仰</button>
+      <button id="cubeRx22">顺时针俯仰</button>
+      <button id="cubeRz12">逆时针翻滚</button>
+      <button id="cubeRz22">顺时针翻滚</button>
+      <button id="small2">缩小</button>
+      <button id="big2">放大</button>
+      <button id="left">向左</button>
+      <button id="right">向右</button>
+      <button id="up">向上</button>
+      <button id="down">向下</button>
+      <button id="rotate_X">绕世界X轴旋转</button>
+      <button id="rotate_Y">绕世界Y轴旋转</button>
+      <button id="rotate_Z">绕世界Z轴旋转</button>
+    </p>
+  </body>
+</html>

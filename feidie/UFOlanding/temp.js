@@ -278,7 +278,22 @@ window.onload=function init() {
     //程序对象
     program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
+    /*//球坐标系
+//
+var near = 0.3;
+var far = 5.0;
+var radius = 2.5;
+var theta  = 0.0;
+var phi    = 0.0;
 
+var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
+var  aspect;       // Viewport aspect ratio
+
+var modelViewMatrix, projectionMatrix;
+var modelViewMatrixLoc, projectionMatrixLoc;
+var eye;
+const at = vec3(0.0, 0.0, 0.0);
+const up = vec3(0.0, 1.0, 0.0); */
     //获取变量地址
     CurModelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
     projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
@@ -713,6 +728,21 @@ function render() {
         transmat=mult(translatemat, transmat);
 
         //星球主体
+        /**
+         * 海绵宝宝：
+         * var specularProduct = mult(lightSpecular, materialSpecular);
+	projection = ortho(-1, 1, -1, 1, -100, 100);
+
+	
+    gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct"),
+       flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program, "diffuseProduct"),
+       flatten(diffuseProduct) );
+    gl.uniform4fv(gl.getUniformLocation(program, "specularProduct"),
+       flatten(specularProduct) );
+    gl.uniform4fv(gl.getUniformLocation(program, "lightPosition"),
+       flatten(lightPosition) );
+ */
 
         ambientProduct = mult(lightAmbient, vec4(1.0,1.0,214.0/255,1.0));//rgba(255,255,214,1.0)   
         diffuseProduct = mult(lightDiffuse, vec4(218.0/255,112.0/255,214.0/255,1.0));//rgba(218,112,214,1.0)

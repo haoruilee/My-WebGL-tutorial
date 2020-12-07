@@ -1,34 +1,5 @@
 var canvas, gl, program;
 
-/*绘制立方体
-function drawBox(gl, n, viewProjMatrix, u_MvpMatrix, u_NormalMatrix) {
-    //计算出计算模型视图矩阵，并赋值给u_MvpMatrix
-    g_mvpMatrix.set(viewProjMatrix);
-    g_mvpMatrix.multiply(g_modelMatrix);
-    gl.uniformMatrix4fv(u_MvpMatrix, false, g_mvpMatrix.elements);
-    
-    //获取模型矩阵的逆转置矩阵，并赋值u_NormalMatrix
-    g_normalMatrix.setInverseOf(g_modelMatrix);
-    g_normalMatrix.transpose();
-    gl.uniformMatrix4fv(u_NormalMatrix, false, g_normalMatrix.elements); */
-//球坐标系
-//
-var near = 0.3;
-var far = 5.0;
-var radius = 2.5;
-var theta  = 0.0;
-var phi    = 0.0;
-
-var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
-var  aspect;       // Viewport aspect ratio
-
-var modelViewMatrix, projectionMatrix;
-var modelViewMatrixLoc, projectionMatrixLoc;
-var eye;
-const at = vec3(0.0, 0.0, 0.0);
-const up = vec3(0.0, 1.0, 0.0);
-/////////////////////////
-
 var R = mat4();
 var rotateMatrix;
 var S = mat4();
@@ -62,7 +33,7 @@ var ear1Tx = -0.2;
 var ear1Ty = 1;
 var ear1Tz = 0;
 
-var ear2Tx = 0.2;
+var ear2Tx = 0;
 var ear2Ty = 1;
 var ear2Tz = 0;
 
@@ -178,6 +149,7 @@ window.onload = function init() {
 
     modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
     gl.uniformMatrix4fv(modelViewMatrix, false, flatten(M));
+
 
     document.getElementById("CurrentSelected").innerHTML = "Current Selected : All";
 
@@ -396,7 +368,6 @@ window.onload = function init() {
         document.getElementById("CurrentSelected").innerHTML = "Current Selected : All";
     }
     document.getElementById("Split").onclick = function () {
-        //没看懂这里
         cubeTx = 0; cubeTy = 1.2; cubeTz = 0;
         ear1Tx = -0.3; ear1Ty = 1.4; ear1Tz = 0.2;
         ear2Tx = 0.4; ear2Ty = 1.3; ear2Tz = -0.3;
@@ -428,35 +399,52 @@ window.onload = function init() {
         scaleZ = event.target.value;
     }
 
+    canvas.addEventListener("mousedown", function (event) {
+        var x = 2 * event.clientX / canvas.width - 1;
+        var y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+        startMotion(x, y);
+    });
 
+    canvas.addEventListener("mouseup", function (event) {
+        var x = 2 * event.clientX / canvas.width - 1;
+        var y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+        stopMotion(x, y);
+    });
+
+    canvas.addEventListener("mousemove", function (event) {
+        var x = 2 * event.clientX / canvas.width - 1;
+        var y = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+        mouseMotion(x, y);
+    });
 
     render();
 };
 
-function initCube(sx,sy,sz,tx,ty,tz,rx,ry,rz) {
+function initCube(sx,sy,sz,tx,ty,tz,rx,ry,rz,colortemp,brown) {
     var vertices = [
-        vec3(0.5, 0.5, 0.5), vec3(-0.5, 0.5, 0.5), vec3(-0.5, -0.5, 0.5), vec3(0.5, -0.5, 0.5),
-        vec3(0.5, 0.5, 0.5), vec3(0.5, -0.5, 0.5), vec3(0.5, -0.5, -0.5), vec3(0.5, 0.5, -0.5),
-        vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, -0.5), vec3(-0.5, 0.5, -0.5), vec3(-0.5, 0.5, 0.5),
-        vec3(-0.5, 0.5, 0.5), vec3(-0.5, 0.5, -0.5), vec3(-0.5, -0.5, -0.5), vec3(-0.5, -0.5, 0.5),
+        vec3(0.5, 0.5, 0.5), vec3(-0.5, 0.5, 0.5),  vec3(-0.5, -0.5, 0.5), vec3(0.5, -0.5, 0.5),
+        vec3(0.5, 0.5, 0.5),  vec3(0.5, -0.5, 0.5), vec3(0.5, -0.5, -0.5), vec3(0.5, 0.5, -0.5),
+        vec3(0.5, 0.5, 0.5),vec3(0.5, 0.5, -0.5), vec3(-0.5, 0.5, -0.5), vec3(-0.5, 0.5, 0.5),
+        vec3(-0.5, 0.5, 0.5), vec3(-0.5, 0.5, -0.5),vec3(-0.5, -0.5, -0.5), vec3(-0.5, -0.5, 0.5),
         vec3(-0.5, -0.5, -0.5), vec3(0.5, -0.5, -0.5), vec3(0.5, -0.5, 0.5), vec3(-0.5, -0.5, 0.5),
         vec3(0.5, -0.5, -0.5), vec3(-0.5, -0.5, -0.5), vec3(-0.5, 0.5, -0.5), vec3(0.5, 0.5, -0.5)
     ];
+    var normals=[vec3(0,0,1),vec3(0,0,1), vec3(0,0,1),vec3(0,0,1),
+        vec3(1,0,0),  vec3(1,0,0), vec3(1,0,0), vec3(1,0,0),
+         vec3(0,1,0), vec3(0,1,0),vec3(0,1,0),vec3(0,1,0),
+        vec3(-1,0,0), vec3(-1,0,0),vec3(-1,0,0),vec3(-1,0,0),
+        vec3(0,-1,0), vec3(0,-1,0),  vec3(0,-1,0),  vec3(0,-1,0),
+         vec3(0,0,-1),  vec3(0,0,-1),vec3(0,0,-1),vec3(0,0,-1)];
 
-    var purple1 = vec3(219 / 255, 166 / 255, 255 / 255);
-    var purple2 = vec3(202 / 255, 127 / 255, 255 / 255);
-    var purple3 = vec3(184 / 255, 84 / 255, 255 / 255);
-    var purple4 = vec3(166 / 255, 41 / 255, 255 / 255);
-    var purple5 = vec3(149 / 255, 0 / 255, 255 / 255);
 
-    var colors = [
-        purple5, purple5, purple5, purple5,
-        purple3, purple3, purple3, purple3,
-        purple4, purple4, purple4, purple4,
-        purple3, purple3, purple3, purple3,
-        purple2, purple2, purple2, purple2,
-        purple1, purple1, purple1, purple1
-    ];
+    var colors=[
+        brown,brown,brown,brown,//back
+        brown,brown,brown,brown,//right
+        brown,brown,brown,brown,//head
+        brown,brown,brown,brown,//left
+        colortemp,colortemp,colortemp,colortemp,
+        colortemp,colortemp,colortemp,colortemp//face
+    ]
 
     var indices = [
         0, 1, 2, 0, 2, 3,
@@ -469,10 +457,11 @@ function initCube(sx,sy,sz,tx,ty,tz,rx,ry,rz) {
 
     initArrayBuffer(vertices, 3, gl.FLOAT, "vPosition");
     initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
+    initArrayBuffer(normals, 3, gl.FLOAT, "a_Normal");
 
-    var indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+
+
+
 
     var T = mat4();
     T = mult(T, rotateX(rx));
@@ -484,64 +473,197 @@ function initCube(sx,sy,sz,tx,ty,tz,rx,ry,rz) {
     translateMatrix = gl.getUniformLocation(program, "translateMatrix");
     gl.uniformMatrix4fv(translateMatrix, false, flatten(T));
 
+
+    var indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+
+    // 设置入射光
+    var u_LightColor = gl.getUniformLocation(program, "u_LightColor");
+    gl.uniform3f(u_LightColor, 1.0, 1.0, 1.0);
+    var u_LightPosition = gl.getUniformLocation(program, "u_LightPosition");
+    gl.uniform3f(u_LightPosition, 2.3, 4.0, 3.5);
+
+    // 设置环境光
+    var u_LightColorAmbient = gl.getUniformLocation(program, "u_LightColorAmbient");
+    gl.uniform3f(u_LightColorAmbient, 0.7, 0.7, 0.7);
+
+
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_BYTE, 0);
 }
 
 function initFace() {
-    var black = [vec3(0 / 255, 0 / 255, 0 / 255)];
+    var white = vec3(255,255,255);
 
-    var eyebrow1 = [
-        vec3(-0.1, 0.12, -0.501), vec3(-0.4, 0.22, -0.501),
-        vec3(0.1 / 3.8 - 0.1, 0.12 + 0.3 / 3.8, -0.501),
-        vec3(0.1 / 3.8 - 0.4, 0.22 + 0.3 / 3.8, -0.501)
+    var eyes1 = [
+        vec3(-0.1, 0, -0.501),
+        vec3(-0.4, 0, -0.501),
+        vec3(- 0.1, -0.22 , -0.501),
+        vec3(- 0.4, -0.22, -0.501)
     ];
 
-    var eyebrow2 = [
-        vec3(0.1, 0.12, -0.501), vec3(0.4, 0.22, -0.501),
-        vec3(-0.1 / 3.8 + 0.1, 0.12 + 0.3 / 3.8, -0.501),
-        vec3(-0.1 / 3.8 + 0.4, 0.22 + 0.3 / 3.8, -0.501)
+    var eyes2 = [
+        vec3(0.1, 0, -0.501),
+        vec3(0.4, 0, -0.501),
+        vec3(0.1, -0.22 , -0.501),
+        vec3(0.4, -0.22, -0.501)
     ];
-
-    var eye1 = [vec3(-0.2, 0.05, -0.501)];
-    for (var i = 0; i < 361; i++) {
-        eye1.push(vec3(-0.2 + 0.14 * Math.sin(Math.PI / 180 * i), 0.05 + 0.14 * Math.cos(Math.PI / 180 * i), -0.501));
-        black.push(vec3(0 / 255, 0 / 255, 0 / 255));
-    }
-
-    var eye2 = [vec3(0.2, 0.05, -0.501)];
-    for (var i = 0; i < 361; i++) {
-        eye2.push(vec3(0.2 + 0.14 * Math.sin(Math.PI / 180 * i), 0.05 + 0.14 * Math.cos(Math.PI / 180 * i), -0.501));
-    }
-
-    var mouth = [vec3(0.45 * Math.sin(Math.PI / 180 * -45), 0.17 - 0.45 * Math.cos(Math.PI / 180 * -45), -0.501)];
-    for (var i = 1; i < 92; i++) {
-        mouth.push(vec3(0.45 * Math.sin(Math.PI / 180 * (-45 + i)), 0.17 - 0.45 * Math.cos(Math.PI / 180 * (-45 + i)), -0.501));
-        mouth.push(vec3(0.34 * Math.sin(Math.PI / 180 * (-60 + i * 4 / 3)), -0.02 - 0.34 * Math.cos(Math.PI / 180 * (-60 + i * 4 / 3)), -0.501));
-    }
 
     var T = mat4();
     T = mult(T, scalem(0.5, 0.5, 0.5));
     T = mult(T, translate(cubeTx, cubeTy, cubeTz));
     translateMatrix = gl.getUniformLocation(program, "translateMatrix");
     gl.uniformMatrix4fv(translateMatrix, false, flatten(T));
+    var colors = [
+        white,white,white,white,white,white,white,white
+    ]
+    initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
 
-    initArrayBuffer(black, 3, gl.FLOAT, "vColor");
+    initArrayBuffer(eyes1, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, eyes1.length);
 
-    initArrayBuffer(eyebrow1, 3, gl.FLOAT, "vPosition");
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, eyebrow1.length);
+    initArrayBuffer(eyes2, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, eyes2.length);
 
-    initArrayBuffer(eyebrow2, 3, gl.FLOAT, "vPosition");
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, eyebrow2.length);
 
-    initArrayBuffer(eye1, 3, gl.FLOAT, "vPosition");
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, eye1.length);
+    var blue = vec3(27 / 255, 177 / 255, 154 / 255);
 
-    initArrayBuffer(eye2, 3, gl.FLOAT, "vPosition");
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, eye2.length);
+    var eyeball1 = [
+        vec3(-0.1, 0, -0.502),
+        vec3(-0.25, 0, -0.502),
+        vec3(-0.1, -0.22 , -0.502),
+        vec3(-0.25, -0.22, -0.502)
+    ];
+    var eyeball2 = [
+        vec3(0.1, 0, -0.502),
+        vec3(0.25, 0, -0.502),
+        vec3(0.1, -0.22 , -0.502),
+        vec3(0.25, -0.22, -0.502)
+    ];
 
-    initArrayBuffer(mouth, 3, gl.FLOAT, "vPosition");
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, mouth.length);
+    var colors = [
+        blue,blue,blue,blue,
+        blue,blue,blue,blue
+    ]
+    initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
+
+    initArrayBuffer(eyeball1, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, eyeball1.length);
+
+    initArrayBuffer(eyeball2, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, eyeball2.length);
+
+    var brown = vec3(87 / 255, 24 / 255, 23 / 255);
+        var beard1 = [
+        vec3(0.25, -0.27, -0.502),
+        vec3(-0.25, -0.27, -0.502),
+        vec3(0.25, -0.5 , -0.502),
+        vec3(-0.25, -0.5, -0.502)
+    ];
+        var beard2 = [
+        vec3(-0.2,-0.22, -0.502),
+        vec3(-0.3,-0.22, -0.502),
+        vec3(-0.2, -0.5 , -0.502),
+        vec3(-0.3, -0.5, -0.502)
+    ];
+        var beard3 = [
+        vec3(0.3, -0.22, -0.502),
+        vec3(0.2, -0.22, -0.502),
+        vec3(0.3, -0.5 , -0.502),
+        vec3(0.2, -0.5, -0.502)
+    ];
+        var colors = [
+        brown,brown,brown,brown,
+        brown,brown,brown,brown, brown,brown,brown,brown
+    ]
+    initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
+
+    initArrayBuffer(beard1, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, beard1.length);
+
+    initArrayBuffer(beard2, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, beard2.length);
+
+    initArrayBuffer(beard3, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, beard3.length);
+
+
+        var hair1 = [
+        vec3(0.5, 0.5, -0.502),
+        vec3(-0.5, 0.5, -0.502),
+        vec3(0.5, 0.2 , -0.502),
+        vec3(-0.5, 0.2, -0.502)
+    ];
+        var hair2 = [
+        vec3(-0.4,0.5, -0.502),
+        vec3(-0.5,0.5, -0.502),
+        vec3(-0.4, 0.15 , -0.502),
+        vec3(-0.5, 0.15, -0.502)
+    ];
+        var hair3 = [
+        vec3(0.5, 0.5, -0.502),
+        vec3(0.4, 0.5, -0.502),
+        vec3(0.5, 0.15 , -0.502),
+        vec3(0.4, 0.15, -0.502)
+    ];
+        var colors = [
+        brown,brown,brown,brown,
+        brown,brown,brown,brown,
+            //brown,brown,brown,brown,
+            brown,brown,brown,brown
+    ]
+    initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
+
+    initArrayBuffer(hair1, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, hair1.length);
+
+    initArrayBuffer(hair2, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, hair2.length);
+
+    initArrayBuffer(hair3, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, hair3.length);
+
+    var skincolor = vec3(255/255,223/255,206/255);
+     var colors = [
+        skincolor,skincolor,skincolor,skincolor
+    ]
+    initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
+    var skin1 = [
+        vec3(0.501, 0, 0.501), vec3(0.501, -0.5, 0.501), vec3(0.501, 0, -0.501), vec3(0.501, -0.5, -0.501)
+    ];
+     var skin2 = [
+        vec3(-0.501, 0, 0.501), vec3(-0.501, -0.5, 0.501), vec3(-0.501, 0, -0.501), vec3(-0.501, -0.5, -0.501)
+    ];
+    initArrayBuffer(skin1, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, skin1.length);
+    initArrayBuffer(skin2, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, skin2.length);
+
+
+
+
+    var N = 10000;
+    var center=vec3(0, -0.11,-0.501)
+    var vertexData = [center];
+    var r = 0.1;
+
+    for (var i = 0; i <= N; i++) {
+        var theta = i * 2 * Math.PI / N;
+        var x = center[0]+r * Math.sin(theta);
+        var y = center[1]+ r * Math.cos(theta);
+        var point = vec3(x, y,-0.501);
+        vertexData.push(point);
+     }
+    colors=[vec3(1,0.772,0.65)]
+    for (var i = 0; i <= N; i++) {
+        point=vec3(1,0.772,0.65)
+        colors.push(point);
+     }
+    initArrayBuffer(colors, 3, gl.FLOAT, "vColor");
+    initArrayBuffer(vertexData, 3, gl.FLOAT, "vPosition");
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, vertexData.length);
 }
+
 
 function initQuadrangularPyramid(sx,sy,sz,tx,ty,tz,rx,ry,rz) {
     var vertices = [
@@ -619,35 +741,21 @@ function render() {
     S = scalem(scaleX, scaleY, scaleZ);
     scaleMatrix = gl.getUniformLocation(program, "scaleMatrix");
     gl.uniformMatrix4fv(scaleMatrix, false, flatten(S));
-
-    initCube(0.5,0.5,0.5,cubeTx,cubeTy,cubeTz,0,0,0);//head
+    var skincolor = vec3(255/255,223/255,206/255);
+    var brown = vec3(87 / 255, 24 / 255, 23 / 255);
+    initCube(0.5,0.5,0.5,cubeTx,cubeTy,cubeTz,0,0,0,skincolor,brown);//head
     initFace();
-    initQuadrangularPyramid(0.5,0.5,0.5,ear1Tx,ear1Ty,ear1Tz,270,0,0);//ear1
+    //initQuadrangularPyramid(0.5,0.5,0.5,ear1Tx,ear1Ty,ear1Tz,270,0,0);//ear1
     initQuadrangularPyramid(0.5,0.5,0.5,ear2Tx,ear2Ty,ear2Tz,270,0,0);//ear2
-    initCube(0.3,0.35,0.3,bodyTx,bodyTy,bodyTz,0,0,0);//body
-    initCube(0.1,0.25,0.1,arm1Tx,arm1Ty,arm1Tz,0,0,20);//arm1
-    initCube(0.1,0.25,0.1,arm2Tx,arm2Ty,arm2Tz,0,0,-20);//arm2
-    initCube(0.12,0.2,0.12,leg1Tx,leg1Ty,leg1Tz,0,0,0);//leg1
-    initCube(0.2,0.2,0.12,leg2Tx,leg2Ty,leg2Tz,0,0,0);//leg2
-    //前三个参数为长宽高
+    initCube(0.3,0.35,0.3,bodyTx,bodyTy,bodyTz,0,0,0,skincolor,skincolor);//body
+    initCube(0.1,0.25,0.1,arm1Tx,arm1Ty,arm1Tz,0,0,20,skincolor,skincolor);//arm1
+    initCube(0.1,0.25,0.1,arm2Tx,arm2Ty,arm2Tz,0,0,-20,skincolor,skincolor);//arm2
+    initCube(0.12,0.2,0.12,leg1Tx,leg1Ty,leg1Tz,0,0,0,skincolor,skincolor);//leg1
+    initCube(0.12,0.2,0.12,leg2Tx,leg2Ty,leg2Tz,0,0,0,skincolor,skincolor);//leg2
 
     M = translate(translateX, translateY, translateZ);
-
-    eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
-        radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
-        console.log("eye",eye);//看是否触发移动
     modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
-    modelViewMatrix = lookAt(eye, at , up);
-    projectionMatrix = mult(perspective(fovy, aspect, near, far),modelViewMatrix);
-    //相机改变modelView
-    
     gl.uniformMatrix4fv(modelViewMatrix, false, flatten(M));
-    //变换矩阵计算
-    let glasstransMat = transmat;
-    glasstransMat=mult(transviewMat,glasstransMat);
-    //传值：变换矩阵
-    gl.uniformMatrix4fv(CurModelViewMatrixLoc, false, flatten(glasstransMat));
-    gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
 
     requestAnimFrame(render);
 }
