@@ -356,7 +356,7 @@ function render(now)
     //如果不ispause则一直转
     /** */
     CubeRotateAngle = 10*now;
-    //console.log("CubeRotateAngle：",CubeRotateAngle);
+    console.log("CubeRotateAngle：",CubeRotateAngle);
 
     // 海绵宝宝变换
     var init = translate(-0.3, 0, 0); // 初始变换矩阵，用于设置模型的初始位置
@@ -865,10 +865,10 @@ function drawRightArm(a, b, c, d, colorIndex, points, colors) {
         vec4(0.2, -0.05, -0.025, 1.0),
         vec4(0.2, 0.05, 0.025, 1.0),
 
-        vec4(0.5, 0, 0.9, 1.0),
-        vec4(0.5, 0.1, 0.9, 1.0),
-        vec4(0.25, 0.1, 0.9, 1.0),
-        vec4(0.25, 0, 0.9, 1.0)
+        vec4(0.5, 0, 0.7, 1.0),
+        vec4(0.5, 0.1, 0.7, 1.0),
+        vec4(0.25, 0.1, 0.7, 1.0),
+        vec4(0.25, 0, 0.7, 1.0)
     ];
     var indices = [a, b, c, a, c, d]; // 顶点索引顺序
     // 存取顶点余顶点索引信息算法

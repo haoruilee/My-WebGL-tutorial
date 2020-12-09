@@ -1,9 +1,12 @@
 var canvas;
 var gl;
 
+var ispause = true; //是否开始旋转
+var then = 0; //计算旋转时间差
+
 var ms = 180; // 画圆的面数
 var projection;
-var lightx = 0.7;
+var lightx = 0.2;
 var lighty = 0.2;
 var lightz = 0;
 var lightPosition = vec4(lightx, lighty, lightz, 0.0);
@@ -22,14 +25,14 @@ var materialAmbient2 = vec4(0.1, 0.18725, 0.1745, 0.8);
 var materialDiffuse2 = vec4(0.396, 0.74151, 0.69102, 0.8);
 var materialSpecular2 = vec4(0.297254, 0.30829, 0.306678, 0.8);
 
-var materialShininess = 100.0;
+var materialShininess = 20.0;
 var materialShininess2 = 50.0;
 
 // 苦力怕
 var points = []; // 顶点容器
 var colors = []; // 颜色容器
 var vColor, vPosition;
-var cBuffer, vBuffer; //  的buffer
+var cBuffer, vBuffer; 
 var numVertices = 36 * 9 + ms * 3 * 2 * 3 + 12; //  顶点个数
 var modelViewMatrix = mat4(); // 当前变换矩阵
 var modelViewMatrixLoc; // shader变量
@@ -47,16 +50,16 @@ var world = 0;
 var points2 = []; // 顶点容器
 var colors2 = []; // 颜色容器
 var vColor2, vPosition2;
-var cBuffer2, vBuffer2; // 村民 的buffer
-var numVertices2 = 36 * 9 + ms * 3 * 2 * 3 + 12; // 村民 顶点个数
+var cBuffer2, vBuffer2; // 村民的buffer
+var numVertices2 = 36 * 9 + ms * 3 * 2 * 3 + 12; // 村民顶点个数
 var CubeTx2 = 0,
     CubeTy2 = 0,
-    CubeTz2 = 0; // 村民 平移量
+    CubeTz2 = 0; // 村民平移量
 var CubeTTx2 = 0,
     CubeTTy2 = 0,
-    CubeTTz2 = 0; // 村民 平移量
+    CubeTTz2 = 0; //平移量
 
-var CubeRotateAngle2 = 0; // 村民 旋转角度
+var CubeRotateAngle2 = 0; // 村民旋转角度
 var CubeRotateAngle2x = 0; // 旋转角度x
 var CubeRotateAngle2z = 0; // 旋转角度z
 var CubeRotateAngle2_Y = 0;
@@ -72,13 +75,15 @@ var viewIndex = 0; // 视图编号
 var body = vec3(0.4, 0.45, 0.2);
 var cloth = vec3(0.4, 0.05, 0.2);
 var pants = vec3(0.4, 0.1, 0.2);
-var leg = vec3(0.2, 0.25, 0.05);
-var shoe = vec3(0.2, 0.05, 0.05);
+var leg = vec3(0.18, 0.25, 0.05);
+var shoe = vec3(0.18, 0.05, 0.05);
 var leg2 = vec3(0.12, 0.55, 0.05);
 var shoe2 = vec3(0.12, 0.05, 0.05);
 
-var eye = vec3(0, 0, 0);
-var at = vec3(0, 0, 0);
+var eye = vec3(0.0, 0.0, 0.0);
+const at = vec3(0.0, 0.0, 0.0);
+const up = vec3(0.0, 1.0, 0.0);
+
 var radius = 4.0;
 var theta = 0.0;
 var phi = 0.0;
@@ -105,7 +110,8 @@ window.onload = function init() {
     }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(30.0 / 255.0, 20.0 / 255.0, 77.0 / 255.0, 1.0); // 黑色背景色
+    gl.clearColor(30.0 / 255.0, 20.0 / 255.0, 77.0 / 255.0, 1.0); // 紫色背景色
+    //gl.clearColor(1, 1, 1, 1.0); // 紫色背景色
 
     setPoints(); // 设置所有顶点位置及颜色
     gl.enable(gl.DEPTH_TEST); // 消除隐藏面
@@ -267,10 +273,20 @@ window.onload = function init() {
         CubeRotateAngle2_Z += 5;
         world = 1;
     }
+    document.getElementById("startrot").onclick = function () {
+        if(ispause) {
+        ispause=false;
+        console.log("ispause：",ispause)
+        }
+        else if(!ispause) {
+        ispause=true;
+        console.log("ispause：",ispause)
+        }
+    }
     document.getElementById("changelight1").onclick = function () {
 
-        lightx += 0.1;
-        lighty += 0.1;
+        lightx += 0.05;
+        //lighty += 0.05;
         lightPosition = vec4(lightx, lighty, lightz, 0.0);
         var vNormal = gl.getAttribLocation(program, "vNormal");
         gl.vertexAttribPointer(vNormal, 4, gl.FLOAT, false, 0, 0);
@@ -295,7 +311,7 @@ window.onload = function init() {
 
         gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"),
             false, flatten(projection));
-        render();
+        //render();
 
 
     };
@@ -322,7 +338,12 @@ window.onload = function init() {
 
     gl.uniformMatrix4fv(gl.getUniformLocation(program, "projectionMatrix"),
         false, flatten(projection));
-    render();
+
+    /**页面加载调用 requestAnimationFrame 时会传入时间。
+
+我觉得如果时间的单位是秒会简单一些，由于 requestAnimationFrame 传递给我们的时间是毫秒 （千分之一秒），我们需要将它乘以 0.001 得到秒。 */
+    requestAnimationFrame(render);
+
 
     // 添加鼠标事件监听
     initEventHandles(canvas);
@@ -332,9 +353,22 @@ window.onload = function init() {
 
 }
 
-function render() {
+function render(now) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+    //console.log("now：",now)
+    // 转换时间为秒
+    now *= 0.001;
+    // 减去上一次的时间得到时间差
+    var deltaTime = now - then;
+    //console.log("deltaTime：",deltaTime)
+    // 记住这次时间
+    then = now;
+    //如果不ispause则一直转
+    /** */
+    if(!ispause) {
+    CubeRotateAngle = 90 * now;
+    console.log("CubeRotateAngle：", CubeRotateAngle);
+    }
     //  变换
     var init = translate(-0.3, 0, 0); // 初始变换矩阵，用于设置模型的初始位置
     var S = scalem(scalePercent, scalePercent, scalePercent);
@@ -461,25 +495,6 @@ function initEventHandles(domElement) {
 
         var x = event.clientX,
             y = event.clientY;
-
-        //if (dragging) {
-
-        //    // 旋转比例--速度
-        //    var factor = 512 / domElement.height;
-
-        //    var dx = factor * (x - lastX);
-        //    var newRotationMatrix = new mat4();
-        //    newRotationMatrix = mult(rotateY(-dx), newRotationMatrix);
-        //    var dy = factor * (y - lastY);
-        //    newRotationMatrix = mult(rotateX(-dy), newRotationMatrix);
-
-
-        //    viewMatrix = mult(newRotationMatrix, viewMatrix);
-        //    gl.uniformMatrix4fv(viewMatrixLoc, false, flatten(viewMatrix));
-
-        //    render();
-        //}
-
         if (dragging) {
             phi = phi - (x - lastX) * 30 * dr * (-0.001);
             theta = theta + (y - lastY) * 30 * dr * (-0.001);
@@ -506,9 +521,6 @@ function onMouseWheel(event) {
 
     scalePercent += 0.05 * Math.sign(event.deltaY)
     scalePercent2 += 0.05 * Math.sign(event.deltaY)
-
-
-    render();
 
 }
 
@@ -538,19 +550,19 @@ function setPoints() {
     drawPants(0, 4, 5, 1, 2, points, colors); // 裤子的第五个面，褐色
     drawPants(3, 7, 6, 2, 2, points, colors); // 裤子的第六个面，褐色
 
-    drawLeftLeg2(0, 1, 2, 3, 1, points, colors); // 左腿的第一个面，白色
-    drawLeftLeg2(0, 3, 7, 4, 1, points, colors); // 左腿的第二个面，白色
-    drawLeftLeg2(4, 5, 6, 7, 1, points, colors); // 左腿的第三个面，白色
-    drawLeftLeg2(1, 5, 6, 2, 1, points, colors); // 左腿的第四个面，白色
-    drawLeftLeg2(0, 4, 5, 1, 1, points, colors); // 左腿的第五个面，白色
-    drawLeftLeg2(3, 7, 6, 2, 1, points, colors); // 左腿的第六个面，白色
+    drawLeftLeg2(0, 1, 2, 3, 0, points, colors); // 左腿的第一个面，白色
+    drawLeftLeg2(0, 3, 7, 4, 0, points, colors); // 左腿的第二个面，白色
+    drawLeftLeg2(4, 5, 6, 7, 0, points, colors); // 左腿的第三个面，白色
+    drawLeftLeg2(1, 5, 6, 2, 0, points, colors); // 左腿的第四个面，白色
+    drawLeftLeg2(0, 4, 5, 1, 0, points, colors); // 左腿的第五个面，白色
+    drawLeftLeg2(3, 7, 6, 2, 0, points, colors); // 左腿的第六个面，白色
 
-    drawRightLeg2(0, 1, 2, 3, 1, points, colors); // 右腿的第一个面，白色
-    drawRightLeg2(0, 3, 7, 4, 1, points, colors); // 右腿的第二个面，白色
-    drawRightLeg2(4, 5, 6, 7, 1, points, colors); // 右腿的第三个面，白色
-    drawRightLeg2(1, 5, 6, 2, 1, points, colors); // 右腿的第四个面，白色
-    drawRightLeg2(0, 4, 5, 1, 1, points, colors); // 右腿的第五个面，白色
-    drawRightLeg2(3, 7, 6, 2, 1, points, colors); // 右腿的第六个面，白色
+    drawRightLeg2(0, 1, 2, 3, 0, points, colors); // 右腿的第一个面，白色
+    drawRightLeg2(0, 3, 7, 4, 0, points, colors); // 右腿的第二个面，白色
+    drawRightLeg2(4, 5, 6, 7, 0, points, colors); // 右腿的第三个面，白色
+    drawRightLeg2(1, 5, 6, 2, 0, points, colors); // 右腿的第四个面，白色
+    drawRightLeg2(0, 4, 5, 1, 0, points, colors); // 右腿的第五个面，白色
+    drawRightLeg2(3, 7, 6, 2, 0, points, colors); // 右腿的第六个面，白色
 
     drawLeftShoe2(0, 1, 2, 3, 3, points, colors); // 左腿鞋子的第一个面，黑色
     drawLeftShoe2(0, 3, 7, 4, 3, points, colors); // 左腿鞋子的第二个面，黑色
@@ -566,19 +578,19 @@ function setPoints() {
     drawRightShoe2(0, 4, 5, 1, 3, points, colors); // 右腿鞋子的第五个面，黑色
     drawRightShoe2(3, 7, 6, 2, 3, points, colors); // 右腿鞋子的第六个面，黑色
 
-    drawLeftArm(0, 1, 2, 3, 0, points, colors); // 左手臂的第一个面，黄色
-    drawLeftArm(0, 3, 7, 4, 0, points, colors); // 左手臂的第二个面，黄色
-    drawLeftArm(4, 5, 6, 7, 0, points, colors); // 左手臂的第三个面，黄色
-    drawLeftArm(1, 5, 6, 2, 0, points, colors); // 左手臂的第四个面，黄色
-    drawLeftArm(0, 4, 5, 1, 0, points, colors); // 左手臂的第五个面，黄色
-    drawLeftArm(3, 7, 6, 2, 0, points, colors); // 左手臂的第六个面，黄色
+    drawLeftArm2(0, 1, 2, 3, 0, points, colors); // 左手臂的第一个面，黄色
+    drawLeftArm2(0, 3, 7, 4, 0, points, colors); // 左手臂的第二个面，黄色
+    drawLeftArm2(4, 5, 6, 7, 0, points, colors); // 左手臂的第三个面，黄色
+    drawLeftArm2(1, 5, 6, 2, 0, points, colors); // 左手臂的第四个面，黄色
+    drawLeftArm2(0, 4, 5, 1, 0, points, colors); // 左手臂的第五个面，黄色
+    drawLeftArm2(3, 7, 6, 2, 0, points, colors); // 左手臂的第六个面，黄色
 
-    drawRightArm(0, 1, 2, 3, 0, points, colors); // 右手臂的第一个面，黄色
-    drawRightArm(0, 3, 7, 4, 0, points, colors); // 右手臂的第二个面，黄色
-    drawRightArm(4, 5, 6, 7, 0, points, colors); // 右手臂的第三个面，黄色
-    drawRightArm(1, 5, 6, 2, 0, points, colors); // 右手臂的第四个面，黄色
-    drawRightArm(0, 4, 5, 1, 0, points, colors); // 右手臂的第五个面，黄色
-    drawRightArm(3, 7, 6, 2, 0, points, colors); // 右手臂的第六个面，黄色
+    drawRightArm2(0, 1, 2, 3, 0, points, colors); // 右手臂的第一个面，黄色
+    drawRightArm2(0, 3, 7, 4, 0, points, colors); // 右手臂的第二个面，黄色
+    drawRightArm2(4, 5, 6, 7, 0, points, colors); // 右手臂的第三个面，黄色
+    drawRightArm2(1, 5, 6, 2, 0, points, colors); // 右手臂的第四个面，黄色
+    drawRightArm2(0, 4, 5, 1, 0, points, colors); // 右手臂的第五个面，黄色
+    drawRightArm2(3, 7, 6, 2, 0, points, colors); // 右手臂的第六个面，黄色
 
     drawLeftEye(points, colors);
     drawRightEye(points, colors);
@@ -909,6 +921,28 @@ function drawLeftArm(a, b, c, d, colorIndex, points, colors) {
     }
 }
 
+// 画左手臂
+function drawLeftArm2(a, b, c, d, colorIndex, points, colors) {
+    // 左手臂的八个顶点(x,y,z,a)
+    var leftArmVertices = [
+        vec4(-0.2, 0.0, 0.025, 1.0),
+        vec4(-0.2, 0.0, -0.025, 1.0),
+        vec4(-0.2, -0.05, -0.025, 1.0),
+        vec4(-0.2, 0.05, 0.025, 1.0),
+
+        vec4(-0.3, 0, 0.9, 1.0),
+        vec4(-0.3, 0.1, 0.9, 1.0),
+        vec4(-0.25, 0.1, 0.9, 1.0),
+        vec4(-0.25, 0, 0.9, 1.0)
+    ];
+    var indices = [a, b, c, a, c, d]; // 顶点索引顺序
+    // 存取顶点余顶点索引信息算法
+    for (var i = 0; i < indices.length; i++) {
+        points.push(leftArmVertices[indices[i]]);
+        colors.push(chooseColors[colorIndex]); // 黄色
+    }
+}
+
 // 画右手臂
 function drawRightArm(a, b, c, d, colorIndex, points, colors) {
     // 右手臂的八个顶点(x,y,z,a)
@@ -917,10 +951,33 @@ function drawRightArm(a, b, c, d, colorIndex, points, colors) {
         vec4(0.2, 0.0, -0.025, 1.0),
         vec4(0.2, -0.05, -0.025, 1.0),
         vec4(0.2, 0.05, 0.025, 1.0),
+
         vec4(0.3, -0.3, 0.025, 1.0),
         vec4(0.3, -0.3, -0.025, 1.0),
         vec4(0.25, -0.3, -0.025, 1.0),
         vec4(0.25, -0.3, 0.025, 1.0)
+    ];
+    var indices = [a, b, c, a, c, d]; // 顶点索引顺序
+    // 存取顶点余顶点索引信息算法
+    for (var i = 0; i < indices.length; i++) {
+        points.push(leftArmVertices[indices[i]]);
+        colors.push(chooseColors[colorIndex]); // 黄色
+    }
+}
+// 画右手臂
+function drawRightArm2(a, b, c, d, colorIndex, points, colors) {
+    // 右手臂的八个顶点(x,y,z,a)
+
+    var leftArmVertices = [
+        vec4(0.2, 0.0, 0.025, 1.0),
+        vec4(0.2, 0.0, -0.025, 1.0),
+        vec4(0.2, -0.05, -0.025, 1.0),
+        vec4(0.2, 0.05, 0.025, 1.0),
+
+        vec4(0.3, 0, 0.9, 1.0),
+        vec4(0.3, 0.1, 0.9, 1.0),
+        vec4(0.25, 0.1, 0.9, 1.0),
+        vec4(0.25, 0, 0.9, 1.0)
     ];
     var indices = [a, b, c, a, c, d]; // 顶点索引顺序
     // 存取顶点余顶点索引信息算法

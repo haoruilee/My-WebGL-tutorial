@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Halloween</title>
+</head>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+attribute  vec4 vPosition;
+attribute vec4 vNormal;
+attribute vec2 vTexCoord;
+
+varying vec3 N, L, E;
+uniform vec4 lightPosition;
+uniform mat4 viewMatrix;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 normalMatrix;
+
+varying vec2 texCoord;
+
+void main()
+{
+    vec3 pos = (modelViewMatrix * vPosition).xyz;
+
+    // check for directional light
+
+    if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
+    else L = normalize( lightPosition.xyz - pos );
+
+    E =  -normalize(pos);
+    N = normalize(vec3(normalMatrix*vNormal));
+
+    gl_Position = projectionMatrix * viewMatrix * modelViewMatrix * vPosition;
+
+    texCoord = vTexCoord;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+varying vec3 N, L, E;
+
+varying vec2 texCoord; 
+uniform sampler2D texture0;
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
+uniform int bTexCoord;
+
+void main()
+{
+    vec4 fColor;
+
+    vec3 H = normalize( L + E );
+    vec4 ambient = ambientProduct;
+
+    float Kd = max( dot(L, N), 0.0 );
+    vec4  diffuse = Kd*diffuseProduct;
+
+    float Ks = pow( max(dot(N, H), 0.0), shininess );
+    vec4  specular = Ks * specularProduct;
+
+    if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
+
+    fColor = ambient + diffuse +specular;
+    fColor.a = 1.0;
+
+    
+    if(bTexCoord==1)
+        gl_FragColor = fColor * texture2D( texture0, texCoord );
+    if(bTexCoord==0)
+        gl_FragColor = fColor * texture2D( texture1, texCoord );
+    if(bTexCoord==2)
+        gl_FragColor = fColor * texture2D( texture2, texCoord );
+    if(bTexCoord==3)
+        gl_FragColor = fColor * texture2D( texture3, texCoord );
+    if(bTexCoord==4)
+        gl_FragColor = fColor * texture2D( texture4, texCoord );
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="Halloween.js"></script>
+
+<body>
+<canvas id="gl-canvas"  width="650" height="650" >
+    Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<br/>
+
+<p>光源：
+    <button id = "lightLeft">向左</button>
+    <button id = "lightRight">向右</button>
+    <button id = "lightFront">向前</button>
+    <button id = "lightBack">向后</button>
+    <button id = "lightUp">向上</button>
+    <button id = "lightDown">向下</button>
+</p>
+
+<p >左侧苦力怕：
+    <button id="startrot">开始、停止抓人</button>
+    <button id = "cubeForward"hidden>前进</button>
+    <button id = "cubeBack"hidden>后退</button>
+    <button id = "cubeR1"hidden>逆时针旋转</button>
+    <button id = "cubeR2"hidden>顺时针旋转</button>
+    <button id = "small"hidden>缩小</button>
+    <button id = "big"hidden>放大</button>
+</p>
+
+<p>右侧村民：
+    <button id = "cubeForward2">前进</button>
+    <button id = "cubeBack2">后退</button>
+    <button id = "cubeR12">逆时针旋转</button>
+    <button id = "cubeR22">顺时针旋转</button>
+    <button id = "small2">缩小</button>
+    <button id = "big2">放大</button>
+</p>
+
+
+<img id = "texImage" src = "zombie.jpg" hidden />
+<img id = "texImage1" src = "colors.png" hidden />
+<img id = "texImage2" src = "human.jpg" hidden />
+</body>
+</html>
