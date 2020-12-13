@@ -47,32 +47,14 @@ Camera.prototype.getUp = function() {
 };
 //鼠标让相机移动
 Camera.prototype.update = function(interval) {
-	if (Math.abs(this.velTheta) < 0.01) {
-		this.velTheta = 0;
-	} else {
-		this.velTheta *= 0.99;
-	}
-	
-	if (Math.abs(this.velZ) < 0.01) {
-		this.velZ = 0;
-	} else {
-		this.velZ *= 0.99;
-	}
-	
+console.log("thiseye:",this.eye)
+//eye[1]最大是在+-41.666
 	var time = interval / 1000;
 	
 	this.theta += this.velTheta * time;
 	
-	if (this.z < -this.halfMaxZ) {
-		this.z = -this.halfMaxZ;
-		this.velZ = 0;
-	} else if (this.z > this.halfMaxZ) {
-		this.z = this.halfMaxZ;
-		this.velZ = 0;
-	} else {
-		this.z += this.velZ * time;
-	}
-	
+
+	this.z += this.velZ * time;
 	// calculate camera position using cylindrical coordinate system
 	this.eye[0] = this.radius * Math.cos(this.theta);
 	this.eye[1] = this.z;

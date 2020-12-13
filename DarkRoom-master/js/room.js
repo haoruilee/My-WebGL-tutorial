@@ -12,6 +12,7 @@ Room = function(gl, size) {
 ​
 length: 3
 	*/
+	//定义在mesh_factory.js内
 	this.roomMesh = MeshFactory.createCubeMesh(gl, size);
 	//新建床（相对于屋子进行定义）
 	this.tableMesh = MeshFactory.createCubeMesh(gl, [size[0] / 3, 8, size[2] / 3], [0, -size[1] / 4, 0], true);
