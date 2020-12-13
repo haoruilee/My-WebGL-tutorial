@@ -45,7 +45,7 @@ Camera.prototype.getCenter = function() {
 Camera.prototype.getUp = function() {
 	return this.up;
 };
-
+//鼠标让相机移动
 Camera.prototype.update = function(interval) {
 	if (Math.abs(this.velTheta) < 0.01) {
 		this.velTheta = 0;

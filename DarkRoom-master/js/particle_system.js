@@ -107,12 +107,13 @@ ParticleSystem.prototype.update = function(gl, interval, camera) {
 
 ParticleSystem.prototype.createParticle = function() {
 	// randomize start position (using polar coordinates)
-	var radius = Math.random() + 0.4;
-	var angle = Math.random() * 2 * Math.PI;
+	//随机生成火焰的形状
+	var radius = Math.random() + 0.1;
+	var angle = Math.random() * 1 * Math.PI;
 	
 	// randomize start velocity
-	var velXZ = 5 + (Math.random() * 2000) / 1000;
-	var velY = 20 + Math.random() % 40;
+	var velXZ = 5 + (Math.random() * 2000) / 1000;//横向火焰花纹
+	var velY = 20 + Math.random() % 40;//火焰高度
 	
 	// create particle object
 	var particle = {

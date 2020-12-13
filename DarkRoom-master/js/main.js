@@ -1,10 +1,10 @@
 console.log("========================");
 console.log("starting...");
 
-var frameRate = 60;
+var frameRate = 60;//刷新60帧
 var interval = 1000 / frameRate;
 var lastUpdate = 0;
-var stats;
+//var stats;
 var div;
 var canvas;
 var gl;
@@ -40,13 +40,13 @@ window.onload = function () {
     	TextureLoader.load(gl, textures, start);
     	
     	// create stats component
-    	stats = new Stats();
+    	//stats = new Stats();
 
-    	stats.domElement.style.position = 'absolute';
-    	stats.domElement.style.left = '0px';
-    	stats.domElement.style.top = '0px';
+    	//stats.domElement.style.position = 'absolute';
+    	//stats.domElement.style.left = '0px';
+    	//stats.domElement.style.top = '0px';
 
-    	div.appendChild(stats.domElement);
+    	//div.appendChild(stats.domElement);
 	}
 };
 
@@ -138,8 +138,7 @@ function update(canvas, gl) {
 	var now = (new Date()).getTime();
 	scene.update(now - lastUpdate);
 	lastUpdate = now;
-	
-	stats.update();
+	//stats.update();
 }
 
 function printError() {

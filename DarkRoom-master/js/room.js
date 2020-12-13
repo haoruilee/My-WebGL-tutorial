@@ -1,7 +1,22 @@
 Room = function(gl, size) {
 	this.size = size;
+	//封装后的新建cube
+	//新建屋子
+	/*
+	​
+0: 8.333333333333334
+​
+1: 125
+​
+2: 8.333333333333334
+​
+length: 3
+	*/
 	this.roomMesh = MeshFactory.createCubeMesh(gl, size);
-	this.tableMesh = MeshFactory.createCubeMesh(gl, [size[0] / 30, size[1] / 2, size[2] / 30], [0, -size[1] / 4, 0], true);
+	//新建床（相对于屋子进行定义）
+	this.tableMesh = MeshFactory.createCubeMesh(gl, [size[0] / 3, 8, size[2] / 3], [0, -size[1] / 4, 0], true);
+	//[8.333333333333334, 125, 8.333333333333334]  [ 0, -62.5 ]
+	console.log("房间定义：",[size[0] / 30, size[1] / 2, size[2] / 30], [0, -size[1] / 4]);
 	this.texture = TextureLoader.get("res/wall.jpg");
 	
 	var arrays = [ "aPosition", "aNormal", "aTexcoord" ];

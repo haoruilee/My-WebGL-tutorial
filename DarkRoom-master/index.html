@@ -1,121 +1,121 @@
 <html>
-	<head>
-		<title>Dark Room DEMO</title>
-	
-		<!-- lib javascript -->
-		<script type="application/javascript" src="js/lib/glMatrix-0.9.5.min.js"></script>
+  <head>
+    <title>Dark Room DEMO</title>
 
-	
-		<!-- app javascript -->
-		<script type="application/javascript" src="js/main.js"></script>
-		<script type="application/javascript" src="js/mesh_factory.js"></script>
-		<script type="application/javascript" src="js/shader_database.js"></script>
-		<script type="application/javascript" src="js/texture_loader.js"></script>
-		<script type="application/javascript" src="js/particle_system.js"></script>
-		<script type="application/javascript" src="js/room.js"></script>
-		<script type="application/javascript" src="js/camera.js"></script>
-		<script type="application/javascript" src="js/scene.js"></script>
-		
-		<!-- particle glsl shaders -->
-		<script id="particle-vertex-shader" type="x-shader/x-vertex">
-			attribute vec3 aPosition;
-			attribute vec2 aTexcoord;
-			attribute float aLife;
+    <!-- lib javascript -->
+    <script
+      type="application/javascript"
+      src="js/lib/glMatrix-0.9.5.min.js"
+    ></script>
 
-			uniform mat4 uModelview;
-			uniform mat4 uProjection;
+    <!-- app javascript -->
+    <script type="application/javascript" src="js/main.js"></script>
+    <script type="application/javascript" src="js/mesh_factory.js"></script>
+    <script type="application/javascript" src="js/shader_database.js"></script>
+    <script type="application/javascript" src="js/texture_loader.js"></script>
+    <script type="application/javascript" src="js/particle_system.js"></script>
+    <script type="application/javascript" src="js/room.js"></script>
+    <script type="application/javascript" src="js/camera.js"></script>
+    <script type="application/javascript" src="js/scene.js"></script>
 
-			varying vec2 vTexcoord;
-			varying float vLife;
+    <!-- particle glsl shaders -->
+    <script id="particle-vertex-shader" type="x-shader/x-vertex">
+      attribute vec3 aPosition;
+      attribute vec2 aTexcoord;
+      attribute float aLife;
 
-			void main(void) {
-				gl_Position = uProjection * uModelview * vec4(aPosition, 1.0);
-				vTexcoord = aTexcoord;
-				vLife = aLife;
-			}
-		</script>
-		
-		<script id="particle-frag-shader" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision highp float;
-			#endif
+      uniform mat4 uModelview;
+      uniform mat4 uProjection;
 
-			uniform sampler2D uSampler;
+      varying vec2 vTexcoord;
+      varying float vLife;
 
-			varying vec2 vTexcoord;
-			varying float vLife;
+      void main(void) {
+      	gl_Position = uProjection * uModelview * vec4(aPosition, 1.0);
+      	vTexcoord = aTexcoord;
+      	vLife = aLife;
+      }
+    </script>
 
-			void main(void) {
-				float timeFactor = 1.0 - vLife;
+    <script id="particle-frag-shader" type="x-shader/x-fragment">
+      #ifdef GL_ES
+      precision highp float;
+      #endif
 
-				vec4 color = texture2D(uSampler, vTexcoord);
-				color.r *= timeFactor;
-				color.g *= timeFactor * timeFactor;
-				color.b = 0.0;
-				color.a *= timeFactor;
+      uniform sampler2D uSampler;
 
-				gl_FragColor = color;
-			}
-		</script>
-		
-		<!-- room glsl shaders -->
-		<script id="room-vertex-shader" type="x-shader/x-vertex">
-			attribute vec3 aPosition;
-			attribute vec3 aNormal;
-			attribute vec2 aTexcoord;
+      varying vec2 vTexcoord;
+      varying float vLife;
 
-			uniform mat4 uModelview;
-			uniform mat4 uProjection;
+      void main(void) {
+      	float timeFactor = 1.0 - vLife;
 
-			varying vec3 vPosition;
-			varying vec3 vNormal;
-			varying vec2 vTexcoord;
+      	vec4 color = texture2D(uSampler, vTexcoord);
+      	color.r *= timeFactor;
+      	color.g *= timeFactor * timeFactor;
+      	color.b = 0.0;
+      	color.a *= timeFactor;
 
-			void main(void) {
-				gl_Position = uProjection * uModelview * vec4(aPosition, 1.0);
-				vPosition = aPosition;
-				vNormal = aNormal;
-				vTexcoord = aTexcoord;
-			}
-		</script>
-		
-		<script id="room-frag-shader" type="x-shader/x-fragment">
-			#ifdef GL_ES
-			precision highp float;
-			#endif
+      	gl_FragColor = color;
+      }
+    </script>
 
-			uniform sampler2D uSampler;
-			uniform vec3 uAmbientLight;
-			uniform vec3 uLightPosition;
-			uniform float uLightIntensity;
+    <!-- room glsl shaders -->
+    <script id="room-vertex-shader" type="x-shader/x-vertex">
+      attribute vec3 aPosition;
+      attribute vec3 aNormal;
+      attribute vec2 aTexcoord;
 
-			varying vec3 vPosition;
-			varying vec3 vNormal;
-			varying vec2 vTexcoord;
+      uniform mat4 uModelview;
+      uniform mat4 uProjection;
 
-			void main(void) {
-				vec3 pixelVec = uLightPosition - vPosition;
-				vec3 lightDir = normalize(pixelVec);
-				vec3 normalizedNormal = normalize(vNormal);
+      varying vec3 vPosition;
+      varying vec3 vNormal;
+      varying vec2 vTexcoord;
 
-				float distance = length(pixelVec);
-				float quadraticFactor = pow(1.0 - uLightIntensity, 2.0) * 0.005;
-				float lightDotNormal = max(dot(lightDir, normalizedNormal), 0.0);
-				float attenuationFactor = uLightIntensity * 15.0 / (1.0 + quadraticFactor * pow(distance, 2.0));
+      void main(void) {
+      	gl_Position = uProjection * uModelview * vec4(aPosition, 1.0);
+      	vPosition = aPosition;
+      	vNormal = aNormal;
+      	vTexcoord = aTexcoord;
+      }
+    </script>
 
-				vec4 color;
-				color += texture2D(uSampler, vTexcoord) * vec4(uAmbientLight, 1.0);
-				color += texture2D(uSampler, vTexcoord) * vec4(vec3(1.0, 0.8, 0.0) * lightDotNormal * attenuationFactor, 1.0);
-				gl_FragColor = color;
-			}
-		</script>
-	</head>
+    <script id="room-frag-shader" type="x-shader/x-fragment">
+      #ifdef GL_ES
+      precision highp float;
+      #endif
 
-	<body id="body" link="black" alink="black" vlink="black">
-		<div id='content-div'>
-			<canvas id='content-canvas'>
-			</canvas>
+      uniform sampler2D uSampler;
+      uniform vec3 uAmbientLight;
+      uniform vec3 uLightPosition;
+      uniform float uLightIntensity;
 
-		</div>
-	</body>
+      varying vec3 vPosition;
+      varying vec3 vNormal;
+      varying vec2 vTexcoord;
+
+      void main(void) {
+      	vec3 pixelVec = uLightPosition - vPosition;
+      	vec3 lightDir = normalize(pixelVec);
+      	vec3 normalizedNormal = normalize(vNormal);
+
+      	float distance = length(pixelVec);
+      	float quadraticFactor = pow(1.0 - uLightIntensity, 2.0) * 0.005;
+      	float lightDotNormal = max(dot(lightDir, normalizedNormal), 0.0);
+      	float attenuationFactor = uLightIntensity * 15.0 / (1.0 + quadraticFactor * pow(distance, 2.0));
+
+      	vec4 color;
+      	color += texture2D(uSampler, vTexcoord) * vec4(uAmbientLight, 1.0);
+      	color += texture2D(uSampler, vTexcoord) * vec4(vec3(1.0, 0.8, 0.0) * lightDotNormal * attenuationFactor, 1.0);
+      	gl_FragColor = color;
+      }
+    </script>
+  </head>
+
+  <body id="body" link="black" alink="black" vlink="black">
+    <div id="content-div">
+      <canvas id="content-canvas"> </canvas>
+    </div>
+  </body>
 </html>

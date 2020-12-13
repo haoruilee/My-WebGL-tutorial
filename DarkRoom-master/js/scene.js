@@ -7,9 +7,9 @@ function Scene(canvas, gl) {
 
 Scene.prototype.start = function() {
 	console.log("done!");
-	
-	var roomSize = [250, 100, 250];
-	this.room = new Room(this.gl, roomSize);
+	//改变房间大小
+	var roomSize = [250, 250, 250];
+	this.room = new Room(this.gl, roomSize);//定义屋子大小
 	this.particleSystem = new ParticleSystem(this.gl, 500, 1, 500);
 	this.camera = new Camera(this.gl, this.canvas.width / this.canvas.height, roomSize[1] / 6);
 };

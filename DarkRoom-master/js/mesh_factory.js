@@ -56,10 +56,10 @@ MeshFactory.createCubeMesh = function(gl, size, offset, invertNormal) {
 	if (!invertNormal) {
 		invertNormal = false;
 	}
-
+//设定初始相机位置
 	var halfX = size[0] / 2;
 	var halfY = size[1] / 2;
-	var halfZ = size[2] / 3;
+	var halfZ = size[2] / 2;
 	
 	// create position data
 	var positionData = [
