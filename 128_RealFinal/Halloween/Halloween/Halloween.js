@@ -235,7 +235,13 @@ window.onload = function init() {
 
     var image = document.getElementById("texImage"); //图片
     var image2 = document.getElementById("texImage2"); //右图片
-
+    var image3 = document.getElementById("texImage3");//地面图片
+    /*
+    var image = document.getElementById("texImage");//海绵宝宝图片
+    var image1 = document.getElementById("texImage1");//雪人图片
+    var image2 = document.getElementById("texImage2");//粉色海绵宝宝图片
+    var image3 = document.getElementById("texImage3");//地面图片
+*/
     gl = WebGLUtils.setupWebGL(canvas);
     if (!gl) {
         alert("WebGL isn't available");
@@ -289,6 +295,8 @@ window.onload = function init() {
     gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vTexCoord);
 
+    configureTexture3(image3);
+    
     // 创建缓冲区，并向缓冲区写入立方体每个面的法向量信息66666666
     nBuffer6 = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer6);

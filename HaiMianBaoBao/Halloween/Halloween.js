@@ -3,15 +3,17 @@ var gl;
 var program;
 
 var ms = 180; // 画圆的面数
+var ispause = true; //是否开始旋转
+var then = 0; //计算旋转时间差
 
-var lightPosition = vec4(0.8, 0.8, 0.8, 1.0 );
-var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
-var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+var lightPosition = vec4(0.8, 0.8, 0.1, 1.0);
+var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0);
+var lightDiffuse = vec4(1.0, 1.0, 1.0, 1.0);
+var lightSpecular = vec4(1.0, 1.0, 1.0, 1.0);
 
-var materialAmbient = vec4( 1.0, 0.0, 1.0, 1.0 );
-var materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0);
-var materialSpecular = vec4( 1.0, 0.8, 0.0, 1.0 );
+var materialAmbient = vec4(1.0, 0.0, 1.0, 1.0);
+var materialDiffuse = vec4(1.0, 0.8, 0.0, 1.0);
+var materialSpecular = vec4(1.0, 0.8, 0.0, 1.0);
 var materialShininess = 100.0;
 
 var modelViewMatrix, normalMatrix;
@@ -120,16 +122,27 @@ var aspect = 1.0;   // Viewport aspect ratio
 var near = 0.04;
 var far = 10.0;
 
-var body = vec3( 0.4, 0.45, 0.2 );
-var cloth = vec3( 0.4, 0.05, 0.2 );
-var pants = vec3( 0.4, 0.1, 0.2 );
-var leg = vec3( 0.06, 0.25, 0.05 );
-var shoe = vec3( 0.12, 0.05, 0.05 );
+var body = vec3(0.4, 0.45, 0.2);
+var cloth = vec3(0.4, 0.05, 0.2);
+var pants = vec3(0.4, 0.1, 0.2);
+var leg = vec3(0.15, 0.25, 0.05);
+var shoe = vec3(0.15, 0.05, 0.05);
+
+// 所有的备选颜色
+var chooseColors = [
+    vec4(1.0, 0.96, 0.30, 1.0), // 黄色
+    vec4(1.0, 1.0, 1.0, 1.0), // 白色
+    vec4(0.51, 0.33, 0.24, 1.0), // 褐色
+    vec4(0.0, 0.0, 0.0, 1.0), // 黑色
+    vec4(0.96, 0.64, 0.66, 1.0), // 粉色
+    vec4(1.0, 0.0, 0.0, 1.0), // 红色
+    vec4(139/255, 69/255, 19/255, 1.0) // 棕色
+];
 
 
 var texCoord = [
-    vec2(1, 1),
-    vec2(1, 1),
+    vec2(0, 0),
+    vec2(0, 1),
     vec2(1, 1),
     vec2(1, 0)
 ];
@@ -137,6 +150,7 @@ var texCoord = [
 function configureTexture0( image ) {
     var texture = gl.createTexture();
     gl.activeTexture(gl.TEXTURE0);
+
     gl.bindTexture( gl.TEXTURE_2D, texture );
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGB,
@@ -467,6 +481,15 @@ window.onload = function init() {
         lightPosition[1] -= 0.1;
         CubeTy6 = lightPosition[1];
     };
+    document.getElementById("startrot").onclick = function () {
+        if (ispause) {
+            ispause = false;
+            console.log("ispause：", ispause)
+        } else if (!ispause) {
+            ispause = true;
+            console.log("ispause：", ispause)
+        }
+    }
 
     gl.uniform4fv( gl.getUniformLocation(program,
         "lightPosition"),flatten(lightPosition) );
@@ -482,36 +505,49 @@ window.onload = function init() {
     render();
 };
 
-function render()
+function render(now)
 {
-    gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     projectionMatrix = perspective(fovy, aspect, near, far);
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+    now *= 0.001;
+    // 减去上一次的时间得到时间差
+    var deltaTime = now - then;
+    //console.log("deltaTime：",deltaTime)
+    // 记住这次时间
+    then = now;
+    //如果不ispause则一直转
+    /** */
+    if (!ispause) {
+        CubeRotateAngle += 80 * deltaTime;
+        console.log("CubeRotateAngle：", CubeRotateAngle);
+    }
 
-    // 海绵宝宝变换
+    // 左侧苦力怕变换
     var init = translate(-0.3, 0, 0); // 初始变换矩阵，用于设置模型的初始位置
     var S = scalem(scalePercent, scalePercent, scalePercent);
     var T = translate(CubeTx, CubeTy, CubeTz);
     var R = rotateY(CubeRotateAngle);
-    
+
     modelViewMatrix = mult(mult(mult(init, T), R), S);
     var m = mult(mult(T, R), S); // 用于处理正面的方向
-    
+
     // 记录正面的方向
-    direct = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct = multMat4Vec4(m, direct);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
-    // 海绵宝宝顶点
+
+    // 顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置材质
+    //左侧人身子
     materialAmbient = vec4(0.215, 0.1745, 0.0215, 0.55); // 翠色
     materialDiffuse = vec4(0.07568, 0.61424, 0.07568, 0.55);
     materialSpecular = vec4(0.633, 0.727811, 0.633, 0.55);
@@ -519,145 +555,142 @@ function render()
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "lightPosition"), flatten(lightPosition));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( vPosition );
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer);
-    gl.vertexAttribPointer( vNormal, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal);
-
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer);
-    gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
+    gl.vertexAttribPointer(vNormal, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
+    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.enableVertexAttribArray(vTexCoord);
-    
-    gl.drawArrays(gl.TRIANGLES, 0, 36*3);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 36 * 3);
 
     bodyMove();
-    
-    // 粉色海绵宝宝变换
+
+    // 右变换
     init = translate(0.3, 0, 0); // 初始变换矩阵，用于设置模型的初始位置
     S = scalem(scalePercent2, scalePercent2, scalePercent2);
     T = translate(CubeTx2, CubeTy2, CubeTz2);
     R = rotateY(CubeRotateAngle2);
-    
+
     modelViewMatrix = mult(mult(mult(init, T), R), S);
     m = mult(mult(T, R), S);
-    
+
     // 记录正面的方向
-    direct2 = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct2 = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct2 = multMat4Vec4(m, direct2);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
-    // 海绵宝宝顶点
+
+    // 顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer2);
     gl.vertexAttribPointer(vPosition2, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置新材质
-// 右边的人全身
-materialAmbient = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rgb(185,145,125,1)
-materialDiffuse = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rgb(185,145,125,1)
-materialSpecular = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rgb(185,145,125,1)
+    // 右边的人全身
+    materialAmbient = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rgb(185,145,125,1)
+    materialDiffuse = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rgb(185,145,125,1)
+    materialSpecular = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rgb(185,145,125,1)
     materialShininess = 100.0;
     ambientProduct = mult(lightAmbient, materialAmbient);
     diffuseProduct = mult(lightDiffuse, materialDiffuse);
     specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer2 );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer2);
     gl.vertexAttribPointer(vPosition2, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( vPosition2 );
+    gl.enableVertexAttribArray(vPosition2);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer2);
-    gl.vertexAttribPointer( vNormal2, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal2);
-    
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer2);
-    gl.vertexAttribPointer( vTexCoord2, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer2);
+    gl.vertexAttribPointer(vNormal2, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal2);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer2);
+    gl.vertexAttribPointer(vTexCoord2, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 2);
     gl.activeTexture(gl.TEXTURE2);
     gl.enableVertexAttribArray(vTexCoord2);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 36*9);
+    gl.drawArrays(gl.TRIANGLES, 0, 36 * 9);
 
-    // 雪人变换
     init = translate(0, -0.14, 0); // 初始变换矩阵，用于设置模型的初始位置
     S = scalem(scalePercent3, scalePercent3, scalePercent3);
     T = translate(CubeTx3, CubeTy3, CubeTz3);
     R = rotateY(CubeRotateAngle3);
-    
+
     modelViewMatrix = mult(mult(mult(init, T), R), S);
     m = mult(mult(T, R), S);
-    
+
     // 记录正面的方向
-    direct3 = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct3 = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct3 = multMat4Vec4(m, direct3);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
+
     // 雪人顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer3);
     gl.vertexAttribPointer(vPosition3, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置新材质
-    materialAmbient = vec4( 0.0, 0.0, 1.0, 1.0 );
-    materialDiffuse = vec4( 0.0, 0.0, 1.0, 1.0);
-    materialSpecular = vec4( 0.0, 0.0, 1.0, 1.0 );
+    materialAmbient = vec4(1.0, 1.0, 1.0, 1.0);
+    materialDiffuse = vec4(1.0, 1.0, 1.0, 1.0);
+    materialSpecular = vec4(1.0, 1.0, 1.0, 1.0);
     materialShininess = 100.0;
     ambientProduct = mult(lightAmbient, materialAmbient);
     diffuseProduct = mult(lightDiffuse, materialDiffuse);
     specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer3 );
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer3);
     gl.vertexAttribPointer(vPosition3, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( vPosition3 );
+    gl.enableVertexAttribArray(vPosition3);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer3);
-    gl.vertexAttribPointer( vNormal3, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal3);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer3);
+    gl.vertexAttribPointer(vNormal3, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal3);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer3);
-    gl.vertexAttribPointer( vTexCoord3, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer3);
+    gl.vertexAttribPointer(vTexCoord3, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 0);
     gl.activeTexture(gl.TEXTURE1);
     gl.enableVertexAttribArray(vTexCoord3);
-    
-    //gl.drawArrays(gl.LINES, 0, 4*180*180+4*360*360+5*4*90*90+4*(ms*3*2+ms*6)+ms*6*3);
+
+    gl.drawArrays(gl.LINES, 0, 4 * 180 * 180 + 4 * 360 * 360 + 5 * 4 * 90 * 90 + 4 * (ms * 3 * 2 + ms * 6) + ms * 6 * 3);
 
     //地面
     modelViewMatrix = translate(0, -0.32, 0);
@@ -666,62 +699,63 @@ materialSpecular = vec4(185.0 / 255.0, 145.0 / 255.0, 125.0 / 255.0, 1.0); // rg
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer5 );
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer5);
     gl.vertexAttribPointer(vPosition5, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( vPosition5 );
+    gl.enableVertexAttribArray(vPosition5);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer5);
-    gl.vertexAttribPointer( vNormal5, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal5);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer5);
+    gl.vertexAttribPointer(vNormal5, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal5);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer5);
-    gl.vertexAttribPointer( vTexCoord5, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer5);
+    gl.vertexAttribPointer(vTexCoord5, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 3);
     gl.activeTexture(gl.TEXTURE3);
     gl.enableVertexAttribArray(vTexCoord5);
-    gl.drawArrays(gl.TRIANGLES, 0, 36*50*50);
+    gl.drawArrays(gl.TRIANGLES, 0, 36 * 50 * 50);
 
     // 光源变换
     S = scalem(scalePercent6, scalePercent6, scalePercent6);
     T = translate(CubeTx6, CubeTy6, CubeTz6);
-    
+
     modelViewMatrix = mult(T, S);
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
+
     // 设置新材质
-    materialAmbient = vec4( 0.0, 0.0, 1.0, 1.0 );//rgb(0,0,255)
-    materialDiffuse = vec4( 0.0, 0.0, 1.0, 1.0);
-    materialSpecular = vec4( 0.0, 0.0, 1.0, 1.0 );
+    //已删除
+    materialAmbient = vec4(1.0, 1.0, 1.0, 1.0); // rgb(255,255,255)
+    materialDiffuse = vec4(1.0, 1.0, 1.0, 1.0);
+    materialSpecular = vec4(1.0, 1.0, 1.0, 1.0);
     materialShininess = 20.0;
     ambientProduct = mult(lightAmbient, materialAmbient);
     diffuseProduct = mult(lightDiffuse, materialDiffuse);
     specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer6 );
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer6);
     gl.vertexAttribPointer(vPosition6, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray( vPosition6 );
+    gl.enableVertexAttribArray(vPosition6);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, nBuffer6);
-    gl.vertexAttribPointer( vNormal6, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vNormal6);
+    gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer6);
+    gl.vertexAttribPointer(vNormal6, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNormal6);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer6);
-    gl.vertexAttribPointer( vTexCoord5, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer6);
+    gl.vertexAttribPointer(vTexCoord5, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 4);
     gl.activeTexture(gl.TEXTURE4);
     gl.enableVertexAttribArray(vTexCoord6);
-    
+
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
     requestAnimFrame(render);
@@ -750,7 +784,7 @@ function setPoints() {
     drawRightShoe(points_4, normals_4, texCoordsArray_4); // 右腿
     // 画粉色海绵宝宝
     drawHmbb(points2, normals2, texCoordsArray2);
-    drawSnow(points3, normals3, texCoordsArray3);//雪人
+    ///drawSnow(points3, normals3, texCoordsArray3);//雪人
     // snow(points4, normals4);//雪花
     for(var x = -50;x < 50;x=x+2){
         for(var z = -50;z < 50;z=z+2){
@@ -778,7 +812,7 @@ function quadPushTCNULL(texCoordsArray){//输入一个矩形的空纹理坐标
     texCoordsArray.push(texCoord[0]);
 }
 
-function quad(vertices, a, b, c, d, pointArray, normalArray) {//实现法向量
+function quad(vertices, a, b, c, d, pointArray, normalArray) {
     var t1 = subtract(vertices[b], vertices[a]);
     var t2 = subtract(vertices[c], vertices[b]);
     var normal = cross(t1, t2);
@@ -811,7 +845,6 @@ function drawLight(pointArray, normalArray, texCoordsArray) {
         vec4(0.01, 0.01, -0.01, 1.0),
         vec4(0.01, -0.01, -0.01, 1.0)
     ];
-    //function quad(vertices, a, b, c, d, pointArray, normalArray)
     quad(lightVertices, 1, 0, 3, 2, pointArray, normalArray);
     quad(lightVertices, 2, 3, 7, 6, pointArray, normalArray);
     quad(lightVertices, 3, 0, 4, 7, pointArray, normalArray);
@@ -861,10 +894,10 @@ function drawBody(pointArray, normalArray, texCoordsArray) {
     quad(bodyVertices, 4, 5, 6, 7, pointArray, normalArray);
     quad(bodyVertices, 5, 4, 0, 1, pointArray, normalArray);
     var texCoordface = [
-        vec2(0.5, 0.5),
-        vec2(0.5, 0.5),
-        vec2(0.5, 0.5),
-        vec2(0.5, 0.5)
+        vec2(0.25, 0.234),
+        vec2(0.25, 0.65),
+        vec2(0.8, 0.65),
+        vec2(0.8, 0.234)
     ];
     texCoordsArray.push(texCoordface[2]);
     texCoordsArray.push(texCoordface[3]);
@@ -986,10 +1019,10 @@ function drawRightLeg(pointArray, normalArray,texCoordsArray) {
         vec4(pants[0]/4 + leg[0]/2, -body[1]/3 - cloth[1] - pants[1], -leg[2]/2, 1.0),
         vec4(pants[0]/4 + leg[0]/2, -body[1]/3 - cloth[1] - pants[1] - leg[1], -leg[2]/2, 1.0)
     ];
-    quad(rightLegVertices, 0, 1, 2, 3, pointArray, normalArray);
-    quad(rightLegVertices, 0, 1, 2, 3, pointArray, normalArray);
-    quad(rightLegVertices, 0, 1, 2, 3, pointArray, normalArray);
-    quad(rightLegVertices, 0, 1, 2, 3, pointArray, normalArray);
+    quad(rightLegVertices, 1, 0, 3, 2, pointArray, normalArray);
+    quad(rightLegVertices, 2, 3, 7, 6, pointArray, normalArray);
+    quad(rightLegVertices, 3, 0, 4, 7, pointArray, normalArray);
+    quad(rightLegVertices, 6, 5, 1, 2, pointArray, normalArray);
     quad(rightLegVertices, 4, 5, 6, 7, pointArray, normalArray);
     quad(rightLegVertices, 5, 4, 0, 1, pointArray, normalArray);
     for(var i = 0;i < 6;i++){
@@ -1068,7 +1101,6 @@ function drawLeftArm(pointArray, normalArray,texCoordsArray) {
         quadPushTCNULL(texCoordsArray);
     }
 }
-
 // 画左手臂
 function drawLeftArm2(pointArray, normalArray, texCoordsArray) {
     // 左手臂的八个顶点(x,y,z,a)
@@ -1093,6 +1125,7 @@ function drawLeftArm2(pointArray, normalArray, texCoordsArray) {
         quadPushTCNULL(texCoordsArray);
     }
 }
+
 // 画右手臂
 function drawRightArm2(pointArray, normalArray, texCoordsArray) {
     // 右手臂的八个顶点(x,y,z,a)
@@ -1117,6 +1150,8 @@ function drawRightArm2(pointArray, normalArray, texCoordsArray) {
         quadPushTCNULL(texCoordsArray);
     }
 }
+
+
 // 画右手臂
 function drawRightArm(pointArray, normalArray,texCoordsArray) {
     // 右手臂的八个顶点(x,y,z,a)
@@ -1141,52 +1176,7 @@ function drawRightArm(pointArray, normalArray,texCoordsArray) {
     }
 }
 
-//画雪人
-function drawSnow(points, normals,texCoordsArray){
-    var texCoordcolor = [//颜色纹理
-        vec2(0,0),//黑色
-        vec2(0.5,0.5),//白色
-        vec2(0.7,0.7),//红色
-        vec2(0.9,0.9),//棕色
-    ];
-    getBallVertex(0,0.5,0,0.2,180,360,points, normals,texCoordsArray,texCoordcolor[1]);//雪人的头
-    getBallVertex(0,0,0,0.35,360,360,points, normals,texCoordsArray,texCoordcolor[1]);//雪人的身子
-    getBallVertex(0.1,0.5,0.2,0.03,90,360,points, normals,texCoordsArray,texCoordcolor[0]);//眼睛
-    getBallVertex(-0.1,0.5,0.2,0.03,90,360,points, normals,texCoordsArray,texCoordcolor[0]);//眼睛
-    getBallVertex(0,0.27,0.23,0.03,90,360,points, normals,texCoordsArray,texCoordcolor[0]);//衣服上第一个点
-    getBallVertex(0,0.17,0.3,0.03,90,360,points, normals,texCoordsArray,texCoordcolor[0]);//衣服上第二个点
-    getBallVertex(0,0.07,0.34,0.03,90,360,points, normals,texCoordsArray,texCoordcolor[0]);//衣服上第三个点
 
-    getCylinderVertex(0,0.75,0,0.2,0.17,ms,360,points, normals,texCoordsArray,texCoordcolor[3]);////雪人的帽子
-    getCylinderVertex(0,0.65,0,0.1,0.17,ms,360,points, normals,texCoordsArray,texCoordcolor[2]);////雪人的帽子
-    getCylinderVertex(0,0.63,0,0.02,0.3,ms,360,points, normals,texCoordsArray,texCoordcolor[3]);////雪人的帽子
-    var T = translate(0,0,0);
-    var Rx = rotateX(0);
-    var Ry = rotateY(0);
-    var Rz = rotateZ(0);
-    var change = mult(T,mult(Rz,mult(Ry,Rx)));
-    getConeVertex(0,0.5,0.15,0.2,0.05,ms,360,points, normals,change,texCoordsArray,texCoordcolor[2])//雪人的鼻子getCylinderVertex(-0.6,0.6,-0.5,0.25,0.2,ms,360);//
-    getCylinderVertex(0,0.32,0,0.08,0.18,ms,360,points, normals,texCoordsArray,texCoordcolor[2]);////雪人的围巾
-    var T = translate(0.2,0.2,0);
-    var Rx = rotateX(90);
-    var Ry = rotateY(0);
-    var Rz = rotateZ(45);
-    var change = mult(T,mult(Rz,mult(Ry,Rx)));
-    getConeVertex(0,0,0,0.4,0.05,ms,360,points, normals,change,texCoordsArray,texCoordcolor[3])//雪人的右手臂getCylinderVertex(-0.6,0.6,-0.5,0.25,0.2,ms,360);//
-    T = translate(-0.2,0.2,0);
-    Rx = rotateX(90);
-    Ry = rotateY(0);
-    Rz = rotateZ(-45);
-    change = mult(T,mult(Rz,mult(Ry,Rx)));
-    getConeVertex(0,0,0,0.4,0.05,ms,360,points, normals,change,texCoordsArray,texCoordcolor[3])//雪人的左手臂getCylinderVertex(-0.6,0.6,-0.5,0.25,0.2,ms,360);//
-}
-//画雪
-function snow(points, normals){
-    for(var j = 0;j<100;j++)//100*90*90*2雪花
-    {
-        getBallVertex(Math.random()*2-1,Math.random()*10-1,Math.random()*2-1,0.01,90,360,points,normals);
-    }
-}
 //画地面
 function floor(points, normals, texCoordsArray, x, z){//x,z为地面平移的距离
     // 地面的八个顶点(x,y,z,a)
@@ -1211,463 +1201,6 @@ function floor(points, normals, texCoordsArray, x, z){//x,z为地面平移的距
     }
 }
 
-// 画圆（边缘）
-// 半径r 面数m 度数c 偏移量offset
-function getCircleLineVertex(x, y, z, r, m, c, offset) {
-    var arr = [];
-    var addAng = c / m;
-    var angle = 0;
-    for (var i = 0; i < m; i++) {
-        arr.push(vec4(x + Math.sin(Math.PI / 180 * (angle+offset)) * r, y + Math.cos(Math.PI / 180 * (angle+offset)) * r, z, 1.0));
-        angle = angle + addAng;
-        arr.push(vec4(x + Math.sin(Math.PI / 180 * (angle+offset)) * r, y + Math.cos(Math.PI / 180 * (angle+offset)) * r, z, 1.0));
-    }
-    return arr;
-}
-
-// 画圆
-// 半径r 面数m 度数c 偏移量offset
-function getCircleVertex(x, y, z, r, m, c, offset) {
-    var arr = [];
-    var addAng = c / m;
-    var angle = 0;
-    for (var i = 0; i < m; i++) {
-        arr.push(vec4(x + Math.sin(Math.PI / 180 * (angle+offset)) * r, y + Math.cos(Math.PI / 180 * (angle+offset)) * r, z, 1.0));
-        arr.push(vec4(x, y, z, 1.0));
-        angle = angle + addAng;
-        arr.push(vec4(x + Math.sin(Math.PI / 180 * (angle+offset)) * r, y + Math.cos(Math.PI / 180 * (angle+offset)) * r, z, 1.0));
-    }
-    return arr;
-}
-
-//画球（线画法）
-// 半径r 面数m 度数c (x,y,z)球心坐标
-function getBallVertex(x, y, z, r, m, c, points, normals,texCoordsArray,texCoordcolor){//一共m*m*4个点
-    var addAng = c / m;
-    var zangle = 0;//YOZ平面的角度
-    var yangle = 0;//XOY平面的角度
-    var angle = 0;
-    var rr = 0;//各小圆的半径
-    var zz = 0;//各小圆的z坐标
-    var xx = 0;//各小圆的z坐标
-    for (var i = 0; i < m; i++) {//经线
-        rr = Math.sin(Math.PI / 180 * zangle)*r;
-        zz = Math.cos(Math.PI / 180 * zangle)*r;
-        for(var j = 0; j < m; j++){
-            points.push(vec4(x + Math.sin(Math.PI / 180 * angle) * rr, y + Math.cos(Math.PI / 180 * angle) * rr, z + zz, 1.0));
-            normals.push(vec4(Math.sin(Math.PI / 180 * angle) * rr, Math.cos(Math.PI / 180 * angle) * rr, zz, 0));
-            angle = angle + addAng;
-            points.push(vec4(x + Math.sin(Math.PI / 180 * angle) * rr, y +  Math.cos(Math.PI / 180 * angle) * rr, z + zz, 1.0));
-            normals.push(vec4(Math.sin(Math.PI / 180 * angle) * rr, Math.cos(Math.PI / 180 * angle) * rr, zz, 0));
-            texCoordsArray.push(texCoordcolor);
-            texCoordsArray.push(texCoordcolor);
-        }
-        angle = 0;
-        zangle = zangle + addAng;
-    }
-    for (var i = 0; i < m; i++) {//纬线
-        rr = Math.sin(Math.PI / 180 * yangle)*r;
-        xx = Math.cos(Math.PI / 180 * yangle)*r;
-        for(var j = 0; j < m; j++){
-            points.push(vec4(x + xx,y + Math.cos(Math.PI / 180 * angle) * rr, z  + Math.sin(Math.PI / 180 * angle) * rr, 1.0));
-            normals.push(vec4(xx,Math.cos(Math.PI / 180 * angle) * rr,Math.sin(Math.PI / 180 * angle) * rr,0));
-            angle = angle + addAng;
-            points.push(vec4(x + xx,y + Math.cos(Math.PI / 180 * angle) * rr, z  + Math.sin(Math.PI / 180 * angle) * rr, 1.0));
-            normals.push(vec4(xx,Math.cos(Math.PI / 180 * angle) * rr,Math.sin(Math.PI / 180 * angle) * rr,0));
-            texCoordsArray.push(texCoordcolor);
-            texCoordsArray.push(texCoordcolor);
-        }
-        angle = 0;
-        yangle = yangle + addAng;
-    }
-}
-
-// 画圆锥
-// 半径r 面数m 度数c 偏移量offset (x,y,z)底面圆心坐标 h圆锥顶点距离底部的距离
-function getConeVertex(x, y, z, h, r, m, c,points, normals,change,texCoordsArray,texCoordcolor){
-    var addAng = c / m;
-    var angle = 0;
-    var temp;//用于暂时存放点
-    for (var i = 0; i < m; i++) {//地面的圆盘,法向量都朝下
-        temp = vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + Math.sin(Math.PI / 180 * angle) * r,z, 1.0);//第111111111111111个点
-        temp = multMat4Vec4(change,temp);
-        points.push(temp);
-        temp = vec4(0,-1,0,0);//法向量都朝下
-        temp = multMat4Vec4(change,temp);
-        normals.push(temp);
-
-        temp = vec4(x, y, z, 1.0);//第22222222222222个点
-        temp = multMat4Vec4(change,temp);
-        points.push(temp);
-        temp = vec4(0,-1,0,0);//法向量都朝下
-        temp = multMat4Vec4(change,temp);
-        normals.push(temp);
-
-        angle = angle + addAng;
-
-        temp = vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + Math.sin(Math.PI / 180 * angle) * r,z, 1.0);//第33333333333333个点
-        temp = multMat4Vec4(change,temp);
-        points.push(temp);
-        temp = vec4(0,-1,0,0);//法向量都朝下
-        temp = multMat4Vec4(change,temp);
-        normals.push(temp);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-    }
-    angle = 0;
-    for (var i = 0; i < m; i++) {//圆锥侧面
-        temp = vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + Math.sin(Math.PI / 180 * angle) * r,z, 1.0); // 第1个点
-        temp = multMat4Vec4(change,temp);
-        points.push(temp);
-        temp = vec4(Math.cos(Math.PI / 180 * angle) * r*(h*h)/(h*h+r*r), Math.sin(Math.PI / 180 * angle) * r*(h*h)/(h*h+r*r), h*r*r/(h*h+r*r), 0);
-        temp = multMat4Vec4(change,temp);
-        normals.push(temp);
-
-        temp = vec4(x, y, z+h, 1.0);//第222222222222222222个点
-        temp = multMat4Vec4(change,temp);
-        points.push(temp);
-        temp = vec4(Math.cos(Math.PI / 180 * angle) * r*(h*h)/(h*h+r*r),Math.sin(Math.PI / 180 * angle) * r*(h*h)/(h*h+r*r),h*r*r/(h*h+r*r),0);
-        temp = multMat4Vec4(change,temp);
-        normals.push(temp);
-
-        angle = angle + addAng;
-
-        temp = vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + Math.sin(Math.PI / 180 * angle) * r,z, 1.0);//第33333333333333个点
-        temp = multMat4Vec4(change,temp);
-        points.push(temp);
-        temp = vec4(Math.cos(Math.PI / 180 * angle) * r*(h*h)/(h*h+r*r), Math.sin(Math.PI / 180 * angle) * r*(h*h)/(h*h+r*r), h*r*r/(h*h+r*r), 0);
-        temp = multMat4Vec4(change,temp);
-        normals.push(temp);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-    }
-}
-
-// 画圆柱
-// 半径r 面数m 度数c 偏移量offset (x,y,z)底面圆心坐标 h圆柱高度
-function getCylinderVertex(x, y, z, h, r, m, c,points, normals,texCoordsArray,texCoordcolor){//共ms*3*2+ms*6
-    var addAng = c / m;
-    var angle = 0;
-    for (var i = 0; i < m; i++) {//下底面,法向量都朝下
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(0,-1,0,0));
-        points.push(vec4(x, y, z, 1.0));
-        normals.push(vec4(0,-1,0,0));
-        angle = angle + addAng;
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(0,-1,0,0));
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-    }
-    for (var i = 0; i < m; i++) {//上底面,法向量都朝上
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + h,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(0,1,0,0));
-        points.push(vec4(x, y + h, z, 1.0));
-        normals.push(vec4(0,-1,0,0));
-        angle = angle + addAng;
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + h,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(0,-1,0,0));
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-    }
-    for (var i = 0; i < m; i++) {//侧面由多个矩形构成，一个矩形由两个三角形构成
-        //第一个三角形
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y , z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(Math.cos(Math.PI / 180 * angle) * r, 0, Math.sin(Math.PI / 180 * angle) * r, 0));
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + h,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(Math.cos(Math.PI / 180 * angle) * r, 0, Math.sin(Math.PI / 180 * angle) * r, 0));
-        var temp = vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + h, z + Math.sin(Math.PI / 180 * angle) * r, 1.0);
-        angle = angle + addAng;
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y ,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(Math.cos(Math.PI / 180 * angle) * r, 0, Math.sin(Math.PI / 180 * angle) * r, 0));
-        //第二个三角形
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y + h,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(Math.cos(Math.PI / 180 * angle) * r,0,Math.sin(Math.PI / 180 * angle) * r,0));
-        points.push(vec4(x + Math.cos(Math.PI / 180 * angle) * r, y ,z + Math.sin(Math.PI / 180 * angle) * r, 1.0));
-        normals.push(vec4(Math.cos(Math.PI / 180 * angle) * r,0,Math.sin(Math.PI / 180 * angle) * r,0));
-        points.push(temp);
-        normals.push(vec4(temp[0]-x, 0, temp[2]-z, 0));
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-        texCoordsArray.push(texCoordcolor);
-    }
-}
-
-function timedCount()
-{
-    if(CubeTz.toFixed(2) < 0.5 && CubeRotateAngle==0){
-        CubeTz = CubeTz + 0.02;
-        //左手
-        if(direct_1 == 0){
-            CubeRotateAngleZ_1 = 0;
-            CubeRotateAngleX_1 +=9;
-        }else{
-            CubeRotateAngleZ_1 = 0;
-            CubeRotateAngleX_1 -=9;
-        }
-        if(CubeRotateAngleX_1 > 54){
-            direct_1 = 1;
-        }
-        if(CubeRotateAngleX_1 < -54){
-            direct_1 = 0;
-        }
-        //右手
-        if(direct_2 == 0){
-            CubeRotateAngleZ_2 = 0;
-            CubeRotateAngleX_2 -=9;
-        }else{
-            CubeRotateAngleZ_2 = 0;
-            CubeRotateAngleX_2 +=9;
-        }
-        if(CubeRotateAngleX_2 > 54){
-            direct_2 = 0;
-        }
-        if(CubeRotateAngleX_2 < -54){
-            direct_2 = 1;
-        }
-         //右腿
-         if(direct_4 == 0){
-            CubeRotateAngleZ_4 = 0;
-            CubeRotateAngleX_4 +=2.5;
-        }else{
-            CubeRotateAngleZ_4 = 0;
-            CubeRotateAngleX_4 -=2.5;
-        }
-        if(CubeRotateAngleX_4 > 15){
-            direct_4 = 1;
-        }
-        if(CubeRotateAngleX_4 < -15){
-            direct_4 = 0;
-        }
-        //左腿
-        if(direct_3 == 0){
-            CubeRotateAngleZ_3 = 0;
-            CubeRotateAngleX_3 -=2.5;
-        }else{
-            CubeRotateAngleZ_3 = 0;
-            CubeRotateAngleX_3 +=2.5;
-        }
-        if(CubeRotateAngleX_3 > 15){
-            direct_3 = 0;
-        }
-        if(CubeRotateAngleX_3 < -15){
-            direct_3 = 1;
-        }
-    }
-    if(CubeTz.toFixed(2) == 0.5 && CubeRotateAngle==0){
-        CubeRotateAngle = -90;
-        CubeRotateAngleZ_1 = -CubeRotateAngleX_1;
-        CubeRotateAngleZ_2 = -CubeRotateAngleX_2;
-        CubeRotateAngleZ_3 = -CubeRotateAngleX_3;
-        CubeRotateAngleZ_4 = -CubeRotateAngleX_4;
-    }
-    if(CubeTx.toFixed(2) < 1 && CubeRotateAngle==-90){
-        CubeTx = CubeTx + 0.02;
-        //左手
-        if(direct_1 == 0){
-            CubeRotateAngleX_1 = 0;
-            CubeRotateAngleZ_1 -=9;
-        }else{
-            CubeRotateAngleX_1 = 0;
-            CubeRotateAngleZ_1 +=9;
-        }
-        if(CubeRotateAngleZ_1 > 54){
-            direct_1 = 0;
-        }
-        if(CubeRotateAngleZ_1 < -54){
-            direct_1 = 1;
-        }
-        //右手
-        if(direct_2 == 0){
-            CubeRotateAngleX_2 = 0;
-            CubeRotateAngleZ_2 +=9;
-        }else{
-            CubeRotateAngleX_2 = 0;
-            CubeRotateAngleZ_2 -=9;
-        }
-        if(CubeRotateAngleZ_2 > 54){
-            direct_2 = 1;
-        }
-        if(CubeRotateAngleZ_2 < -54){
-            direct_2 = 0;
-        }
-        //右腿
-        if(direct_4 == 0){
-            CubeRotateAngleX_4 = 0;
-            CubeRotateAngleZ_4 -=2.5;
-        }else{
-            CubeRotateAngleX_4 = 0;
-            CubeRotateAngleZ_4 +=2.5;
-        }
-        if(CubeRotateAngleZ_4 > 15){
-            direct_4 = 0;
-        }
-        if(CubeRotateAngleZ_4 < -15){
-            direct_4 = 1;
-        }
-        //左腿
-        if(direct_3 == 0){
-            CubeRotateAngleX_3 = 0;
-            CubeRotateAngleZ_3 +=2.5;
-        }else{
-            CubeRotateAngleX_3 = 0;
-            CubeRotateAngleZ_3 -=2.5;
-        }
-        if(CubeRotateAngleZ_3 > 15){
-            direct_3 = 1;
-        }
-        if(CubeRotateAngleZ_3 < -15){
-            direct_3 = 0;
-        }
-    }
-    if(CubeTx.toFixed(2) == 1 && CubeRotateAngle==-90){
-        CubeRotateAngle = 180;
-        CubeRotateAngleX_1 = -CubeRotateAngleZ_1;
-        CubeRotateAngleX_2 = -CubeRotateAngleZ_2;
-        CubeRotateAngleX_3 = -CubeRotateAngleZ_3;
-        CubeRotateAngleX_4 = -CubeRotateAngleZ_4;
-    }
-    if(CubeTz.toFixed(2) > -0.5 && CubeRotateAngle==180){
-        CubeTz = CubeTz - 0.02;
-        //左手
-        if(direct_1 == 0){
-            CubeRotateAngleZ_1 = 0;
-            CubeRotateAngleX_1 -=9;
-        }else{
-            CubeRotateAngleZ_1 = 0;
-            CubeRotateAngleX_1 +=9;
-        }
-        if(CubeRotateAngleX_1 > 54){
-            direct_1 = 0;
-        }
-        if(CubeRotateAngleX_1 < -54){
-            direct_1 = 1;
-        }
-        //右手
-        if(direct_2 == 0){
-            CubeRotateAngleZ_2 = 0;
-            CubeRotateAngleX_2 +=9;
-        }else{
-            CubeRotateAngleZ_2 = 0;
-            CubeRotateAngleX_2 -=9;
-        }
-        if(CubeRotateAngleX_2 > 54){
-            direct_2 = 1;
-        }
-        if(CubeRotateAngleX_2 < -54){
-            direct_2 = 0;
-        }
-        //右腿
-        if(direct_4 == 0){
-            CubeRotateAngleZ_4 = 0;
-            CubeRotateAngleX_4 -=2.5;
-        }else{
-            CubeRotateAngleZ_4 = 0;
-            CubeRotateAngleX_4 +=2.5;
-        }
-        if(CubeRotateAngleX_4 > 15){
-            direct_4 = 0;
-        }
-        if(CubeRotateAngleX_4 < -15){
-            direct_4 = 1;
-        }
-        //左腿
-        if(direct_3 == 0){
-            CubeRotateAngleZ_3 = 0;
-            CubeRotateAngleX_3 +=2.5;
-        }else{
-            CubeRotateAngleZ_3 = 0;
-            CubeRotateAngleX_3 -=2.5;
-        }
-        if(CubeRotateAngleX_3 > 15){
-            direct_3 = 1;
-        }
-        if(CubeRotateAngleX_3 < -15){
-            direct_3 = 0;
-        }
-    }
-    if(CubeTz.toFixed(2) == -0.5 && CubeRotateAngle==180){
-        CubeRotateAngle=90;
-        CubeRotateAngleZ_1 = -CubeRotateAngleX_1;
-        CubeRotateAngleZ_2 = -CubeRotateAngleX_2;
-        CubeRotateAngleZ_3 = -CubeRotateAngleX_3;
-        CubeRotateAngleZ_4 = -CubeRotateAngleX_4;
-    }
-    if(CubeTx.toFixed(2) > -0.2 && CubeRotateAngle==90){
-        CubeTx = CubeTx - 0.02;
-        //左手
-        if(direct_1 == 0){
-            CubeRotateAngleX_1 = 0;
-            CubeRotateAngleZ_1 +=9;
-        }else{
-            CubeRotateAngleX_1 = 0;
-            CubeRotateAngleZ_1 -=9;
-        }
-        if(CubeRotateAngleZ_1 > 54){
-            direct_1 = 1;
-        }
-        if(CubeRotateAngleZ_1 < -54){
-            direct_1 = 0;
-        }
-        //右手
-        if(direct_2 == 0){
-            CubeRotateAngleX_2 = 0;
-            CubeRotateAngleZ_2 -=9;
-        }else{
-            CubeRotateAngleX_2 = 0;
-            CubeRotateAngleZ_2 +=9;
-        }
-        if(CubeRotateAngleZ_2 > 54){
-            direct_2 = 0;
-        }
-        if(CubeRotateAngleZ_2 < -54){
-            direct_2 = 1;
-        }
-        //右腿
-        if(direct_4 == 0){
-            CubeRotateAngleX_4 = 0;
-            CubeRotateAngleZ_4 +=2.5;
-        }else{
-            CubeRotateAngleX_4 = 0;
-            CubeRotateAngleZ_4 -=2.5;
-        }
-        if(CubeRotateAngleZ_4 > 15){
-            direct_4 = 1;
-        }
-        if(CubeRotateAngleZ_4 < -15){
-            direct_4 = 0;
-        }
-        //左腿
-        if(direct_3 == 0){
-            CubeRotateAngleX_3 = 0;
-            CubeRotateAngleZ_3 -=2.5;
-        }else{
-            CubeRotateAngleX_3 = 0;
-            CubeRotateAngleZ_3 +=2.5;
-        }
-        if(CubeRotateAngleZ_3 > 15){
-            direct_3 = 0;
-        }
-        if(CubeRotateAngleZ_3 < -15){
-            direct_3 = 1;
-        }
-    }
-    if(CubeTx.toFixed(2) == -0.2 && CubeRotateAngle==90){
-        CubeRotateAngle=0;
-        CubeRotateAngleX_1 = CubeRotateAngleZ_1;
-        CubeRotateAngleX_2 = CubeRotateAngleZ_2;
-        CubeRotateAngleX_3 = CubeRotateAngleZ_3;
-        CubeRotateAngleX_4 = CubeRotateAngleZ_4;
-    }
-    t=setTimeout("timedCount()",100)
-}
 
 function initBody(){
     // 创建缓冲区，并向缓冲区写入立方体每个面的法向量信息11111111111111111111111111111左手臂
@@ -1780,48 +1313,49 @@ function bodyMove(){
     var R = rotateY(CubeRotateAngle);
     var Rx_1 = rotateX(CubeRotateAngleX_1);
     var Rz_1 = rotateZ(CubeRotateAngleZ_1);
-    
-    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_1,mult(Rx_1,R))), S);
+
+    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_1, mult(Rx_1, R))), S);
     var m = mult(mult(T, R), S); // 用于处理正面的方向
-    
+
     // 记录正面的方向
-    direct = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct = multMat4Vec4(m, direct);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
+
     // 顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_1);
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置材质
-    materialAmbient = vec4( 1.0, 1.0, 0.5, 1.0 );
-    materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0);
-    materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
-    materialShininess = 100.0;
+    // 左侧人左手
+    materialAmbient = vec4(0.5, 0.0, 0.5, 1.0); // rgb(127,0,127,1)
+    materialDiffuse = vec4(0.5, 0.0, 0.5, 1.0);
+    materialSpecular = vec4(0.5, 0.0, 0.5, 1.0);
+    materialShininess = 1.0;
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "lightPosition"), flatten(lightPosition));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer_1);
-    gl.vertexAttribPointer( vTexCoord_1, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer_1);
+    gl.vertexAttribPointer(vTexCoord_1, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.enableVertexAttribArray(vTexCoord);
-    
+
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
 
@@ -1832,48 +1366,49 @@ function bodyMove(){
     var R = rotateY(CubeRotateAngle);
     var Rx_2 = rotateX(CubeRotateAngleX_2);
     var Rz_2 = rotateZ(CubeRotateAngleZ_2);
-    
-    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_2,mult(Rx_2,R))), S);
+
+    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_2, mult(Rx_2, R))), S);
     var m = mult(mult(T, R), S); // 用于处理正面的方向
-    
+
     // 记录正面的方向
-    direct = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct = multMat4Vec4(m, direct);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
+
     // 顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_2);
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置材质
-    materialAmbient = vec4( 1.0, 1.0, 0.5, 1.0 );
-    materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0);
-    materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
-    materialShininess = 100.0;
+    // 左侧人右胳膊
+    materialAmbient = vec4(0.5, 0.0, 0.5, 1.0); // rgb(127,0,127,1)
+    materialDiffuse = vec4(0.5, 0.0, 0.5, 1.0);
+    materialSpecular = vec4(0.5, 0.0, 0.5, 1.0);
+    materialShininess = 1.0;
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "lightPosition"), flatten(lightPosition));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer_2);
-    gl.vertexAttribPointer( vTexCoord_2, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer_2);
+    gl.vertexAttribPointer(vTexCoord_2, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.enableVertexAttribArray(vTexCoord);
-    
+
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 
     // 左腿变换
@@ -1883,49 +1418,50 @@ function bodyMove(){
     var R = rotateY(CubeRotateAngle);
     var Rx_3 = rotateX(CubeRotateAngleX_3);
     var Rz_3 = rotateZ(CubeRotateAngleZ_3);
-    
-    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_3,mult(Rx_3,R))), S);
+
+    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_3, mult(Rx_3, R))), S);
     var m = mult(mult(T, R), S); // 用于处理正面的方向
-    
+
     // 记录正面的方向
-    direct = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct = multMat4Vec4(m, direct);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
+
     // 顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_3);
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置材质
-    materialAmbient = vec4( 1.0, 1.0, 0.5, 1.0 );
-    materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0);
-    materialSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
-    materialShininess = 100.0;
+    // 左侧人左腿
+    materialAmbient = vec4(0.05375, 0.05, 0.06625, 0.82); // rgb(0,0,76)
+    materialDiffuse = vec4(0.18275, 0.17, 0.22525, 0.82);
+    materialSpecular = vec4(0.332741, 0.328634, 0.346435, 0.82);
+    materialShininess = 10.0;
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "lightPosition"), flatten(lightPosition));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer_3);
-    gl.vertexAttribPointer( vTexCoord_3, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer_3);
+    gl.vertexAttribPointer(vTexCoord_3, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.enableVertexAttribArray(vTexCoord);
-    
-    gl.drawArrays(gl.TRIANGLES, 0, 36*2);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 36 * 2);
 
     // 右腿变换
     var init = translate(-0.3, 0, 0); // 初始变换矩阵，用于设置模型的初始位置
@@ -1934,49 +1470,49 @@ function bodyMove(){
     var R = rotateY(CubeRotateAngle);
     var Rx_4 = rotateX(CubeRotateAngleX_4);
     var Rz_4 = rotateZ(CubeRotateAngleZ_4);
-    
-    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_4,mult(Rx_4,R))), S);
+
+    modelViewMatrix = mult(mult(mult(init, T), mult(Rz_4, mult(Rx_4, R))), S);
     var m = mult(mult(T, R), S); // 用于处理正面的方向
-    
+
     // 记录正面的方向
-    direct = vec4( 0.0, 0.0, 1.0, 1.0 ); // 初始化初始方向
+    direct = vec4(0.0, 0.0, 1.0, 1.0); // 初始化初始方向
     direct = multMat4Vec4(m, direct);
-    
+
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    
+
     normalMatrix = modelViewMatrix;
     gl.uniformMatrix4fv(normalMatrixLoc, false, flatten(normalMatrix));
-    
+
     // 顶点
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer_4);
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    
+
     // 设置材质
-    materialAmbient = vec4( 0.0, 1.0, 0.5, 1.0 );
-    materialDiffuse = vec4( 0.0, 0.8, 0.0, 1.0);
-    materialSpecular = vec4( 0.0, 1.0, 1.0, 1.0 );
-    materialShininess = 100.0;
+    // 左侧人右腿
+    materialAmbient = vec4(0.05375, 0.05, 0.06625, 0.82); // rgb(0,0,76)
+    materialDiffuse = vec4(0.18275, 0.17, 0.22525, 0.82);
+    materialSpecular = vec4(0.332741, 0.328634, 0.346435, 0.82);
+    materialShininess = 10.0;
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "ambientProduct"),flatten(ambientProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "diffuseProduct"),flatten(diffuseProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "specularProduct"),flatten(specularProduct) );
-    gl.uniform4fv( gl.getUniformLocation(program,
-        "lightPosition"),flatten(lightPosition) );
-    gl.uniform1f( gl.getUniformLocation(program,
-        "shininess"),materialShininess );
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "ambientProduct"), flatten(ambientProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "diffuseProduct"), flatten(diffuseProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "specularProduct"), flatten(specularProduct));
+    gl.uniform4fv(gl.getUniformLocation(program,
+        "lightPosition"), flatten(lightPosition));
+    gl.uniform1f(gl.getUniformLocation(program,
+        "shininess"), materialShininess);
 
-    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer_4);
-    gl.vertexAttribPointer( vTexCoord_4, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer_4);
+    gl.vertexAttribPointer(vTexCoord_4, 2, gl.FLOAT, false, 0, 0);
     gl.uniform1i(gl.getUniformLocation(program, "bTexCoord"), 1);
     gl.activeTexture(gl.TEXTURE0);
     gl.enableVertexAttribArray(vTexCoord);
-    
-    gl.drawArrays(gl.TRIANGLES, 0, 36*2);
+    gl.drawArrays(gl.TRIANGLES, 0, 36 * 2);
 }
 
 function initEventHandlers(canvas, currentAngle) {
